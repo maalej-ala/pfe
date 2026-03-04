@@ -1,56 +1,100 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
-import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
+import 'package:flutter/material.dart';
+import 'dart:ui';
 
 class CameraService {
   CameraController? controller;
+  bool _isStreaming = false;
 
+  /// Initialize camera
   Future<void> initializeCamera(CameraDescription camera) async {
     controller = CameraController(
       camera,
       ResolutionPreset.medium,
       enableAudio: false,
-      imageFormatGroup: ImageFormatGroup.yuv420,
+      imageFormatGroup: Platform.isAndroid
+      ? ImageFormatGroup.nv21
+      : ImageFormatGroup.bgra8888,
+
     );
+
     await controller!.initialize();
   }
 
-  void startImageStream(Function(CameraImage) onImage) {
-    controller?.startImageStream(onImage);
+  /// Start image stream (cross-platform)
+  void startImageStream(Function(InputImage) onImage) {
+    if (_isStreaming || controller == null) return;
+
+    _isStreaming = true;
+
+    controller!.startImageStream((CameraImage image) {
+      final inputImage = _convertCameraImage(image);
+      if (inputImage != null) {
+        onImage(inputImage);
+      }
+    });
   }
 
+  /// Stop image stream
+  Future<void> stopImageStream() async {
+    if (!_isStreaming || controller == null) return;
+
+    await controller!.stopImageStream();
+    _isStreaming = false;
+  }
+
+  /// Dispose camera
   void dispose() {
     controller?.dispose();
   }
 
-  Uint8List convertYUV420ToNV21(CameraImage image) {
-    final int width = image.width;
-    final int height = image.height;
-    final Uint8List yPlane = image.planes[0].bytes;
-    final Uint8List uPlane = image.planes[1].bytes;
-    final Uint8List vPlane = image.planes[2].bytes;
-    final int yRowStride = image.planes[0].bytesPerRow;
-    final int uvRowStride = image.planes[1].bytesPerRow;
-    final int uvPixelStride = image.planes[1].bytesPerPixel!;
+  /// Convert CameraImage to ML Kit InputImage (Android + iOS safe)
+ InputImage? _convertCameraImage(CameraImage image) {
+  if (controller == null) return null;
 
-    final Uint8List nv21 = Uint8List(width * height * 3 ~/ 2);
+  final camera = controller!.description;
 
-    // Copy Y plane
-    for (int y = 0; y < height; y++) {
-      final int yOffset = y * yRowStride;
-      final int nv21YIndex = y * width;
-      nv21.setRange(nv21YIndex, nv21YIndex + width, yPlane, yOffset);
+  final rotation = InputImageRotationValue.fromRawValue(
+    camera.sensorOrientation,
+  );
+
+  if (rotation == null) return null;
+
+  // ✅ Force correct format depending on platform
+  final format = Platform.isAndroid
+      ? InputImageFormat.nv21
+      : InputImageFormat.bgra8888;
+
+  final bytes = _concatenatePlanes(image.planes);
+
+  final metadata = InputImageMetadata(
+    size: Size(
+      image.width.toDouble(),
+      image.height.toDouble(),
+    ),
+    rotation: rotation,
+    format: format,
+    bytesPerRow: image.planes.first.bytesPerRow,
+  );
+
+  return InputImage.fromBytes(
+    bytes: bytes,
+    metadata: metadata,
+  );
+}
+
+  /// Combine image planes into one Uint8List
+  Uint8List _concatenatePlanes(List<Plane> planes) {
+    final WriteBuffer allBytes = WriteBuffer();
+
+    for (final plane in planes) {
+      allBytes.putUint8List(plane.bytes);
     }
 
-    // Copy interleaved VU plane
-    int uvIndex = width * height;
-    for (int y = 0; y < height ~/ 2; y++) {
-      for (int x = 0; x < width ~/ 2; x++) {
-        final int uvOffset = y * uvRowStride + x * uvPixelStride;
-        nv21[uvIndex++] = vPlane[uvOffset];
-        nv21[uvIndex++] = uPlane[uvOffset];
-      }
-    }
-
-    return nv21;
+    return allBytes.done().buffer.asUint8List();
   }
 }

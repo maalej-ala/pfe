@@ -1,14 +1,12 @@
 import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
-import 'dart:typed_data';
-import 'package:flutter/material.dart';
 
 class FaceDetectionService {
-  late FaceDetector _faceDetector;
+  late final FaceDetector _faceDetector;
 
   FaceDetectionService() {
     _faceDetector = FaceDetector(
       options: FaceDetectorOptions(
-        enableClassification: true,
+        enableClassification: false,
         enableLandmarks: true,
         enableContours: true,
         enableTracking: true,
@@ -16,26 +14,22 @@ class FaceDetectionService {
     );
   }
 
-  Future<String> detectFaceDirection(Uint8List nv21Bytes, Size size, InputImageRotation rotation) async {
-    final inputImage = InputImage.fromBytes(
-      bytes: nv21Bytes,
-      metadata: InputImageMetadata(
-        size: size,
-        rotation: rotation,
-        format: InputImageFormat.nv21,
-        bytesPerRow: size.width.toInt(),
-      ),
-    );
-
+  Future<String> detectFaceDirection(InputImage inputImage) async {
     final faces = await _faceDetector.processImage(inputImage);
 
     if (faces.isEmpty) return 'Aucun visage';
 
     final headEulerY = faces.first.headEulerAngleY ?? 0.0;
+
     if (headEulerY < -15) return 'Gauche';
     if (headEulerY > 15) return 'Droite';
     return 'Front';
   }
+  Future<List<Face>> getFaces(InputImage inputImage) async {
+    final faces = await _faceDetector.processImage(inputImage);
+    return faces;
+  }
+
 
   void dispose() {
     _faceDetector.close();
