@@ -1,3 +1,4 @@
+import 'package:pfe_flutter/widgets/extractFaceFromFile.dart';
 
 
 import 'package:flutter/material.dart';
@@ -45,6 +46,23 @@ class HomePage extends StatelessWidget {
                 await Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (_) => const TextRecognitionWidget(),
+                    fullscreenDialog: true,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              icon: const Icon(Icons.account_box),
+              label: const Text('Extraire visage carte identité'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                textStyle: const TextStyle(fontSize: 18),
+              ),
+              onPressed: () async {
+                await Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (_) => const ExtractFaceFromFilePage(),
                     fullscreenDialog: true,
                   ),
                 );

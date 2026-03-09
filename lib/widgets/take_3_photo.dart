@@ -28,7 +28,7 @@ class _Take3PhotoState extends State<Take3Photo> {
 	String? _facePhotoPath;          // Photo de face
 	String? _gauchePhotoPath;        // Photo profil gauche
 	String? _droitePhotoPath;        // Photo profil droite
-
+  File?  _frontFaceExtracted; // Image du visage extrait de la photo de face
 	@override
 	void initState() {
 		super.initState();
@@ -142,52 +142,71 @@ class _Take3PhotoState extends State<Take3Photo> {
 
 	// Prend une photo pour la direction spécifiée
 	Future<void> _capturePhotoForDirection(String direction) async {
-		final controller = _cameraService.controller;
-		if (controller == null || !controller.value.isInitialized) return;
-		if (_isCapturing) return;  // Évite les captures multiples
-		_isCapturing = true;
-		
-		try {
-			// Petit délai pour stabiliser l'image
-			await Future.delayed(const Duration(milliseconds: 300));
-			final file = await controller.takePicture();  // Capture
-			
-			if (mounted) {
-				setState(() {
-					// Sauvegarde le chemin selon la direction
-					if (direction == 'Front') {
-						_facePhotoPath = file.path;
-					} else if (direction == 'Gauche') {
-						_gauchePhotoPath = file.path;
-					} else if (direction == 'Droite') {
-						_droitePhotoPath = file.path;
-					}
-				});
-				debugPrint('Photo prise pour $direction: ${file.path}');
-				// Feedback visuel de succès
-				ScaffoldMessenger.of(context).showSnackBar(
-					SnackBar(
-						content: Text('✅ Photo $direction prise !'),
-						duration: const Duration(seconds: 1),
-						backgroundColor: Colors.green,
-					),
-				);
-			}
-		} catch (e) {
-			// Gestion des erreurs de capture
-			debugPrint('Erreur lors de la capture: $e');
-			if (mounted) {
-				ScaffoldMessenger.of(context).showSnackBar(
-					SnackBar(
-						content: Text('❌ Erreur: $e'),
-						backgroundColor: Colors.red,
-					),
-				);
-			}
-		} finally {
-			_isCapturing = false;  // Permet de nouvelles captures
-		}
-	}
+  final controller = _cameraService.controller;
+
+  if (controller == null || !controller.value.isInitialized) return;
+  if (_isCapturing) return;
+
+  _isCapturing = true;
+
+  try {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final file = await controller.takePicture();
+
+    File? extractedFace;
+
+    // extraction visage uniquement pour la face front
+    if (direction == 'Front') {
+      extractedFace = await _faceService.extractFaceFromFile(File(file.path));
+    }
+
+    if (mounted) {
+      setState(() {
+
+        if (direction == 'Front') {
+          _facePhotoPath = file.path;
+          _frontFaceExtracted = extractedFace;
+        }
+
+        else if (direction == 'Gauche') {
+          _gauchePhotoPath = file.path;
+        }
+
+        else if (direction == 'Droite') {
+          _droitePhotoPath = file.path;
+        }
+
+      });
+    }
+
+    debugPrint('Photo prise pour $direction: ${file.path}');
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('✅ Photo $direction prise !'),
+        duration: const Duration(seconds: 1),
+        backgroundColor: Colors.green,
+      ),
+    );
+
+  } catch (e) {
+
+    debugPrint('Erreur lors de la capture: $e');
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('❌ Erreur: $e'),
+          backgroundColor: Colors.red,
+        ),
+      );
+    }
+
+  } finally {
+    _isCapturing = false;
+  }
+}
 
 	// Libère les ressources à la destruction du widget
 	@override
@@ -245,39 +264,44 @@ class _Take3PhotoState extends State<Take3Photo> {
 							
 							// Affichage des 3 photos prises
 							Wrap(
-								spacing: 16,
-								runSpacing: 16,
-								alignment: WrapAlignment.center,
-								children: [
-									// Photo de face
-									if (_facePhotoPath != null)
-										Column(
-											mainAxisSize: MainAxisSize.min,
-											children: [
-												const Text('Photo Face'),
-												Image.file(File(_facePhotoPath!), width: 100, height: 100),
-											],
-										),
-									// Photo profil gauche
-									if (_gauchePhotoPath != null)
-										Column(
-											mainAxisSize: MainAxisSize.min,
-											children: [
-												const Text('Photo Gauche'),
-												Image.file(File(_gauchePhotoPath!), width: 100, height: 100),
-											],
-										),
-									// Photo profil droite
-									if (_droitePhotoPath != null)
-										Column(
-											mainAxisSize: MainAxisSize.min,
-											children: [
-												const Text('Photo Droite'),
-												Image.file(File(_droitePhotoPath!), width: 100, height: 100),
-											],
-										),
-								],
-							),
+  spacing: 16,
+  runSpacing: 16,
+  alignment: WrapAlignment.center,
+  children: [
+
+    if (_facePhotoPath != null)
+      Column(
+        children: [
+          const Text('Photo Face'),
+          Image.file(File(_facePhotoPath!), width: 100, height: 100),
+        ],
+      ),
+
+    if (_frontFaceExtracted != null)
+      Column(
+        children: [
+          const Text('Visage extrait'),
+          Image.file(_frontFaceExtracted!, width: 100, height: 100),
+        ],
+      ),
+
+    if (_gauchePhotoPath != null)
+      Column(
+        children: [
+          const Text('Photo Gauche'),
+          Image.file(File(_gauchePhotoPath!), width: 100, height: 100),
+        ],
+      ),
+
+    if (_droitePhotoPath != null)
+      Column(
+        children: [
+          const Text('Photo Droite'),
+          Image.file(File(_droitePhotoPath!), width: 100, height: 100),
+        ],
+      ),
+  ],
+),
 							const SizedBox(height: 20),
 						],
 					),
