@@ -2,20 +2,26 @@ import 'package:flutter/material.dart';
 import 'package:pfe_flutter/pages/home_page.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const BankApp());
 }
 
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
+class BankApp extends StatelessWidget {
+  const BankApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Flutter Demo',
+      title: 'Compte Bancaire',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF0A2342),
+          brightness: Brightness.light,
+        ),
+        useMaterial3: true,
+        fontFamily: 'Georgia',
       ),
-      home: const HomePage(title: 'Flutter Demo Home Page'),
+      home: const HomePage(),
     );
   }
 }
