@@ -1,8 +1,8 @@
   import 'dart:io';
   import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-  import 'package:pfe_flutter/features/face_detection/face_detection_service.dart';
-  import 'package:pfe_flutter/widgets/document_scanner.dart';
+  import 'package:pfe_flutter/shared/services/face_detection_service.dart';
+  import 'package:pfe_flutter/shared/widgets/document_scanner.dart';
 
   class ExtractFaceFromFilePage extends StatefulWidget {
     const ExtractFaceFromFilePage({super.key});

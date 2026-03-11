@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_flutter/pages/mieux_vous_connaitre_page.dart';
+import 'package:pfe_flutter/features/identification/view_model/identification_view_model.dart';
+import 'package:pfe_flutter/shared/app_colors.dart';
+import 'package:pfe_flutter/features/mieux_vous_connaitre/views/mieux_vous_connaitre_page.dart';
 
 class IdentificationPage extends StatefulWidget {
   const IdentificationPage({super.key});
@@ -9,8 +11,7 @@ class IdentificationPage extends StatefulWidget {
 }
 
 class _IdentificationPageState extends State<IdentificationPage> {
-  String _civilite = 'M.';
-  bool _accepteMentions = false;
+  late final IdentificationViewModel _viewModel;
 
   final _nomController = TextEditingController();
   final _prenomController = TextEditingController();
@@ -19,12 +20,25 @@ class _IdentificationPageState extends State<IdentificationPage> {
   final _dateController = TextEditingController();
 
   @override
+  void initState() {
+    super.initState();
+    _viewModel = IdentificationViewModel();
+    _viewModel.addListener(_updateUI);
+  }
+
+  void _updateUI() {
+    if (mounted) setState(() {});
+  }
+
+  @override
   void dispose() {
+    _viewModel.removeListener(_updateUI);
     _nomController.dispose();
     _prenomController.dispose();
     _telController.dispose();
     _emailController.dispose();
     _dateController.dispose();
+    _viewModel.dispose();
     super.dispose();
   }
 
@@ -37,9 +51,9 @@ class _IdentificationPageState extends State<IdentificationPage> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.dark(
-              primary: Color(0xFFC9A84C),
-              surface: Color(0xFF0A2342),
+            colorScheme: ColorScheme.dark(
+              primary: AppColors.secondary,
+              surface: AppColors.primary,
               onSurface: Colors.white,
             ),
           ),
@@ -48,25 +62,27 @@ class _IdentificationPageState extends State<IdentificationPage> {
       },
     );
     if (picked != null) {
-      setState(() {
-        _dateController.text =
-            '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      });
+      final formatted =
+          '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      _dateController.text = formatted;
+      _viewModel.updateDateNaissance(formatted);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final state = _viewModel.state;
+
     return Scaffold(
       backgroundColor: const Color(0xFFF5F3EE),
       body: Stack(
         children: [
-          // Top navy header band
+          // Bande haute navy
           Container(
             height: 220,
-            decoration: const BoxDecoration(
-              color: Color(0xFF0A2342),
-              borderRadius: BorderRadius.only(
+            decoration: BoxDecoration(
+              color: AppColors.primary,
+              borderRadius: const BorderRadius.only(
                 bottomLeft: Radius.circular(32),
                 bottomRight: Radius.circular(32),
               ),
@@ -76,10 +92,9 @@ class _IdentificationPageState extends State<IdentificationPage> {
           SafeArea(
             child: Column(
               children: [
-                // App bar
+                // AppBar personnalisée
                 Padding(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 20.0, vertical: 12),
+                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12),
                   child: Row(
                     children: [
                       GestureDetector(
@@ -99,19 +114,16 @@ class _IdentificationPageState extends State<IdentificationPage> {
                       ),
                       const Spacer(),
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC9A84C).withOpacity(0.2),
+                          color: AppColors.secondary.withOpacity(0.2),
                           borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: const Color(0xFFC9A84C).withOpacity(0.5),
-                          ),
+                          border: Border.all(color: AppColors.secondary.withOpacity(0.5)),
                         ),
                         child: const Text(
                           'Étape 1 / 4',
                           style: TextStyle(
-                            color: Color(0xFFC9A84C),
+                            color: AppColors.secondary,
                             fontSize: 12,
                             fontWeight: FontWeight.w600,
                           ),
@@ -121,7 +133,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
                   ),
                 ),
 
-                // Title in header
+                // Titre
                 const Padding(
                   padding: EdgeInsets.symmetric(horizontal: 24.0),
                   child: Column(
@@ -139,10 +151,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
                       SizedBox(height: 4),
                       Text(
                         'Veuillez renseigner vos informations personnelles',
-                        style: TextStyle(
-                          color: Colors.white60,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: Colors.white60, fontSize: 13),
                       ),
                     ],
                   ),
@@ -158,8 +167,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
                     child: LinearProgressIndicator(
                       value: 0.25,
                       backgroundColor: Colors.white.withOpacity(0.15),
-                      valueColor: const AlwaysStoppedAnimation<Color>(
-                          Color(0xFFC9A84C)),
+                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
                       minHeight: 4,
                     ),
                   ),
@@ -167,7 +175,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
 
                 const SizedBox(height: 20),
 
-                // Form card
+                // Formulaire
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -178,7 +186,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
                         borderRadius: BorderRadius.circular(24),
                         boxShadow: [
                           BoxShadow(
-                            color: const Color(0xFF0A2342).withOpacity(0.08),
+                            color: AppColors.primary.withOpacity(0.08),
                             blurRadius: 20,
                             offset: const Offset(0, 4),
                           ),
@@ -187,30 +195,26 @@ class _IdentificationPageState extends State<IdentificationPage> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          // Civilité
                           _SectionLabel(text: 'Civilité'),
                           const SizedBox(height: 10),
                           Row(
                             children: [
                               _CiviliteChip(
                                 label: 'M.',
-                                selected: _civilite == 'M.',
-                                onTap: () =>
-                                    setState(() => _civilite = 'M.'),
+                                selected: state.civilite == 'M.',
+                                onTap: () => _viewModel.updateCivilite('M.'),
                               ),
                               const SizedBox(width: 12),
                               _CiviliteChip(
                                 label: 'Mme',
-                                selected: _civilite == 'Mme',
-                                onTap: () =>
-                                    setState(() => _civilite = 'Mme'),
+                                selected: state.civilite == 'Mme',
+                                onTap: () => _viewModel.updateCivilite('Mme'),
                               ),
                             ],
                           ),
 
                           const SizedBox(height: 24),
 
-                          // Nom
                           _SectionLabel(text: 'Nom'),
                           const SizedBox(height: 8),
                           _InputField(
@@ -218,11 +222,11 @@ class _IdentificationPageState extends State<IdentificationPage> {
                             hint: 'Votre nom de famille',
                             icon: Icons.person_outline_rounded,
                             keyboardType: TextInputType.name,
+                            onChanged: _viewModel.updateNom,
                           ),
 
                           const SizedBox(height: 20),
 
-                          // Prénom
                           _SectionLabel(text: 'Prénom'),
                           const SizedBox(height: 8),
                           _InputField(
@@ -230,25 +234,23 @@ class _IdentificationPageState extends State<IdentificationPage> {
                             hint: 'Votre prénom',
                             icon: Icons.badge_outlined,
                             keyboardType: TextInputType.name,
+                            onChanged: _viewModel.updatePrenom,
                           ),
 
                           const SizedBox(height: 20),
 
-                          // Téléphone
                           _SectionLabel(text: 'Numéro de téléphone'),
                           const SizedBox(height: 8),
                           _InputField(
                             controller: _telController,
-                            ////// il faut changer + 216 par le code du pays de l'utilisateur
-
                             hint: '+216 XX XX XX XX',
                             icon: Icons.phone_outlined,
                             keyboardType: TextInputType.phone,
+                            onChanged: _viewModel.updateTel,
                           ),
 
                           const SizedBox(height: 20),
 
-                          // Email
                           _SectionLabel(text: 'Adresse e-mail'),
                           const SizedBox(height: 8),
                           _InputField(
@@ -256,11 +258,11 @@ class _IdentificationPageState extends State<IdentificationPage> {
                             hint: 'exemple@email.com',
                             icon: Icons.mail_outline_rounded,
                             keyboardType: TextInputType.emailAddress,
+                            onChanged: _viewModel.updateEmail,
                           ),
 
                           const SizedBox(height: 20),
 
-                          // Date de naissance
                           _SectionLabel(text: 'Date de naissance'),
                           const SizedBox(height: 8),
                           GestureDetector(
@@ -285,8 +287,8 @@ class _IdentificationPageState extends State<IdentificationPage> {
                               color: const Color(0xFFF5F3EE),
                               borderRadius: BorderRadius.circular(14),
                               border: Border.all(
-                                color: _accepteMentions
-                                    ? const Color(0xFFC9A84C).withOpacity(0.5)
+                                color: state.accepteMentions
+                                    ? AppColors.secondary.withOpacity(0.5)
                                     : Colors.transparent,
                                 width: 1.5,
                               ),
@@ -297,14 +299,11 @@ class _IdentificationPageState extends State<IdentificationPage> {
                                 Transform.scale(
                                   scale: 1.1,
                                   child: Checkbox(
-                                    value: _accepteMentions,
-                                    onChanged: (val) {
-                                      setState(() {
-                                        _accepteMentions = val ?? false;
-                                      });
-                                    },
-                                    activeColor: const Color(0xFFC9A84C),
-                                    checkColor: const Color(0xFF0A2342),
+                                    value: state.accepteMentions,
+                                    onChanged: (val) =>
+                                        _viewModel.updateAccepteMentions(val ?? false),
+                                    activeColor: AppColors.secondary,
+                                    checkColor: AppColors.primary,
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(4),
                                     ),
@@ -312,39 +311,30 @@ class _IdentificationPageState extends State<IdentificationPage> {
                                       color: Color(0xFFBBB49A),
                                       width: 1.5,
                                     ),
-                                    materialTapTargetSize:
-                                        MaterialTapTargetSize.shrinkWrap,
+                                    materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                                 Expanded(
                                   child: RichText(
-                                    text: TextSpan(
-                                      style: const TextStyle(
+                                    text: const TextSpan(
+                                      style: TextStyle(
                                         color: Color(0xFF555555),
                                         fontSize: 12.5,
                                         height: 1.5,
                                       ),
                                       children: [
-                                        const TextSpan(
-                                          text:
-                                              'J\'accepte les ',
-                                        ),
+                                        TextSpan(text: 'J\'accepte les '),
                                         TextSpan(
                                           text:
                                               'mentions légales relatives à la protection des données personnelles',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             color: Color(0xFFC9A84C),
                                             fontWeight: FontWeight.w600,
-                                            decoration:
-                                                TextDecoration.underline,
-                                            decorationColor:
-                                                Color(0xFFC9A84C),
+                                            decoration: TextDecoration.underline,
                                           ),
                                         ),
-                                        const TextSpan(
-                                          text: ' conformément au RGPD.',
-                                        ),
+                                        TextSpan(text: ' conformément au RGPD.'),
                                       ],
                                     ),
                                   ),
@@ -360,19 +350,19 @@ class _IdentificationPageState extends State<IdentificationPage> {
                             width: double.infinity,
                             height: 54,
                             child: ElevatedButton(
-                              onPressed: _accepteMentions
+                              onPressed: state.accepteMentions
                                   ? () {
                                       Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const MieuxVousConnaitrePage(),
-              ),);
+                                        context,
+                                        MaterialPageRoute(
+                                          builder: (_) => const MieuxVousConnaitrePage(),
+                                        ),
+                                      );
                                     }
                                   : null,
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: const Color(0xFF0A2342),
-                                disabledBackgroundColor:
-                                    const Color(0xFFCCCCCC),
+                                backgroundColor: AppColors.primary,
+                                disabledBackgroundColor: const Color(0xFFCCCCCC),
                                 foregroundColor: Colors.white,
                                 elevation: 0,
                                 shape: RoundedRectangleBorder(
@@ -394,8 +384,8 @@ class _IdentificationPageState extends State<IdentificationPage> {
                                   Icon(
                                     Icons.arrow_forward_rounded,
                                     size: 18,
-                                    color: _accepteMentions
-                                        ? const Color(0xFFC9A84C)
+                                    color: state.accepteMentions
+                                        ? AppColors.secondary
                                         : Colors.white54,
                                   ),
                                 ],
@@ -407,7 +397,6 @@ class _IdentificationPageState extends State<IdentificationPage> {
                     ),
                   ),
                 ),
-
                 const SizedBox(height: 20),
               ],
             ),
@@ -417,6 +406,8 @@ class _IdentificationPageState extends State<IdentificationPage> {
     );
   }
 }
+
+// ====================== WIDGETS INTERNES (inchangés sauf _InputField) ======================
 
 class _SectionLabel extends StatelessWidget {
   final String text;
@@ -442,6 +433,7 @@ class _InputField extends StatelessWidget {
   final IconData icon;
   final TextInputType keyboardType;
   final IconData? suffixIcon;
+  final ValueChanged<String>? onChanged;   // ← AJOUTÉ pour le ViewModel
 
   const _InputField({
     required this.controller,
@@ -449,6 +441,7 @@ class _InputField extends StatelessWidget {
     required this.icon,
     required this.keyboardType,
     this.suffixIcon,
+    this.onChanged,
   });
 
   @override
@@ -456,6 +449,7 @@ class _InputField extends StatelessWidget {
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
+      onChanged: onChanged,                    // ← Connexion au ViewModel
       style: const TextStyle(
         fontSize: 14.5,
         color: Color(0xFF0A2342),
@@ -468,18 +462,13 @@ class _InputField extends StatelessWidget {
           fontSize: 14,
           fontWeight: FontWeight.normal,
         ),
-        prefixIcon: Icon(
-          icon,
-          size: 19,
-          color: const Color(0xFF8899AA),
-        ),
+        prefixIcon: Icon(icon, size: 19, color: const Color(0xFF8899AA)),
         suffixIcon: suffixIcon != null
             ? Icon(suffixIcon, size: 18, color: const Color(0xFF8899AA))
             : null,
         filled: true,
         fillColor: const Color(0xFFF9F8F5),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: const BorderSide(color: Color(0xFFE5E0D5), width: 1),
@@ -490,8 +479,7 @@ class _InputField extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide:
-              const BorderSide(color: Color(0xFFC9A84C), width: 1.5),
+          borderSide: const BorderSide(color: Color(0xFFC9A84C), width: 1.5),
         ),
       ),
     );
@@ -515,17 +503,12 @@ class _CiviliteChip extends StatelessWidget {
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
-        padding:
-            const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 12),
         decoration: BoxDecoration(
-          color: selected
-              ? const Color(0xFF0A2342)
-              : const Color(0xFFF5F3EE),
+          color: selected ? const Color(0xFF0A2342) : const Color(0xFFF5F3EE),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: selected
-                ? const Color(0xFF0A2342)
-                : const Color(0xFFDDD8CC),
+            color: selected ? const Color(0xFF0A2342) : const Color(0xFFDDD8CC),
             width: 1.5,
           ),
         ),
@@ -533,8 +516,7 @@ class _CiviliteChip extends StatelessWidget {
           label,
           style: TextStyle(
             color: selected ? Colors.white : const Color(0xFF666666),
-            fontWeight:
-                selected ? FontWeight.bold : FontWeight.normal,
+            fontWeight: selected ? FontWeight.bold : FontWeight.normal,
             fontSize: 14,
           ),
         ),

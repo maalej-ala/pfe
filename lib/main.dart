@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:pfe_flutter/pages/home_page.dart';
+import 'package:pfe_flutter/features/home/view/home_page.dart';
 
 void main() {
   runApp(const BankApp());

@@ -1,80 +1,74 @@
 import 'package:flutter/material.dart';
-import 'identification_page.dart';
+import 'package:pfe_flutter/features/identification/views/identification_page.dart';
+import 'package:pfe_flutter/shared/app_colors.dart';
+import 'package:pfe_flutter/shared/constantes.dart';
+import '../view_models/home_view_model.dart';
+import '../models/step_model.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({super.key});
 
   @override
   Widget build(BuildContext context) {
+
+    final vm = HomeViewModel();
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A2342),
+      backgroundColor: AppColors.primary,
+
       body: Stack(
         children: [
-          // Background decorative circles
+
+          /// decorative circles
           Positioned(
             top: -80,
             right: -60,
-            child: Container(
-              width: 280,
-              height: 280,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF1A3A5C).withOpacity(0.6),
-              ),
-            ),
+            child: _circle(280, AppColors.darkBlue.withOpacity(0.6)),
           ),
+
           Positioned(
             bottom: -100,
             left: -80,
-            child: Container(
-              width: 320,
-              height: 320,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFF1A3A5C).withOpacity(0.4),
-              ),
-            ),
+            child: _circle(320, AppColors.darkBlue.withOpacity(0.4)),
           ),
+
           Positioned(
             top: 200,
             left: -40,
-            child: Container(
-              width: 160,
-              height: 160,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                color: const Color(0xFFC9A84C).withOpacity(0.15),
-              ),
-            ),
+            child: _circle(160, AppColors.secondary.withOpacity(0.15)),
           ),
 
-          // Main content
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 28.0),
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+
                   const SizedBox(height: 24),
 
-                  // Logo / Bank name
+                  /// logo
                   Row(
                     children: [
+
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFC9A84C),
+                          color: AppColors.secondary,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
                           Icons.account_balance,
-                          color: Color(0xFF0A2342),
+                          color: AppColors.primary,
                           size: 22,
                         ),
                       ),
+
                       const SizedBox(width: 12),
+
                       const Text(
-                        'BanqueDigitale',
+                        AppConstants.bankName,
                         style: TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -87,7 +81,7 @@ class HomePage extends StatelessWidget {
 
                   const Spacer(flex: 2),
 
-                  // Main illustration placeholder
+                  /// illustration centrale
                   Center(
                     child: Container(
                       width: 200,
@@ -96,30 +90,34 @@ class HomePage extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            const Color(0xFFC9A84C).withOpacity(0.3),
-                            const Color(0xFFC9A84C).withOpacity(0.05),
+                            AppColors.secondary.withOpacity(0.3),
+                            AppColors.secondary.withOpacity(0.05),
                           ],
                         ),
                       ),
+
                       child: Center(
                         child: Container(
                           width: 130,
                           height: 130,
+
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: const Color(0xFF122D4E),
+                            color: AppColors.cardBackground,
+
                             boxShadow: [
                               BoxShadow(
-                                color: const Color(0xFFC9A84C).withOpacity(0.3),
+                                color: AppColors.secondary.withOpacity(0.3),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
                             ],
                           ),
+
                           child: const Icon(
                             Icons.credit_card_rounded,
                             size: 60,
-                            color: Color(0xFFC9A84C),
+                            color: AppColors.secondary,
                           ),
                         ),
                       ),
@@ -128,71 +126,71 @@ class HomePage extends StatelessWidget {
 
                   const Spacer(flex: 1),
 
-                  // Headline
-                  const Text(
-                    'Votre banque,\npartout avec vous.',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 34,
-                      fontWeight: FontWeight.bold,
-                      height: 1.25,
-                      letterSpacing: -0.5,
-                    ),
-                  ),
+                  /// titre
+                 const Text( "Votre banque,\npartout avec vous.", 
+                 style: TextStyle( 
+                  color: Colors.white, 
+                  fontSize: 34, 
+                  fontWeight: FontWeight.bold, 
+                  ), ), 
+                  const SizedBox(height: 16), 
+                  Text( "Ouvrez votre compte bancaire en quelques minutes, 100% en ligne, sans vous déplacer.", 
+                  style: TextStyle( 
+                    color: Colors.white.withOpacity(0.65), 
+                    fontSize: 15, ), ),
+                     const SizedBox(height: 40),
 
-                  const SizedBox(height: 16),
-
-                  // Subtitle
-                  Text(
-                    'Ouvrez votre compte bancaire en quelques minutes, 100% en ligne, sans vous déplacer.',
-                    style: TextStyle(
-                      color: Colors.white.withOpacity(0.65),
-                      fontSize: 15,
-                      height: 1.6,
-                    ),
-                  ),
-
-                  const SizedBox(height: 40),
-
-                  // Steps indicator
+                  /// steps indicator
                   Row(
                     children: [
-                      _StepDot(label: 'Identification', number: '1', isActive: false),
-                      _StepLine(),
-                      _StepDot(label: 'Profil', number: '2', isActive: false),
-                      _StepLine(),
-                      _StepDot(label: 'Mot de passe', number: '3', isActive: false),
-                      _StepLine(),
-                      _StepDot(label: 'Signature', number: '4', isActive: false),
+
+                      StepDot(step: vm.steps[0]),
+                      const StepLine(),
+
+                      StepDot(step: vm.steps[1]),
+                      const StepLine(),
+
+                      StepDot(step: vm.steps[2]),
+                      const StepLine(),
+
+                      StepDot(step: vm.steps[3]),
+
                     ],
                   ),
 
                   const SizedBox(height: 44),
 
-                  // CTA Button
+                  /// bouton
                   SizedBox(
                     width: double.infinity,
                     height: 56,
+
                     child: ElevatedButton(
                       onPressed: () {
+
                         Navigator.push(
                           context,
                           MaterialPageRoute(
-                            builder: (context) => const IdentificationPage(),
+                            builder: (_) => const IdentificationPage(),
                           ),
                         );
+
                       },
+
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFC9A84C),
-                        foregroundColor: const Color(0xFF0A2342),
+                        backgroundColor: AppColors.secondary,
+                        foregroundColor: AppColors.primary,
                         elevation: 0,
+
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(16),
                         ),
                       ),
+
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
+
                           Text(
                             'Ouvrir un compte',
                             style: TextStyle(
@@ -201,7 +199,9 @@ class HomePage extends StatelessWidget {
                               letterSpacing: 0.3,
                             ),
                           ),
+
                           SizedBox(width: 10),
+
                           Icon(Icons.arrow_forward_rounded, size: 20),
                         ],
                       ),
@@ -210,12 +210,13 @@ class HomePage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  // Secondary link
+                  /// secondary link
                   Center(
                     child: TextButton(
                       onPressed: () {},
+
                       child: Text(
-                        'J\'ai déjà un compte  →',
+                        "J'ai déjà un compte →",
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 14,
@@ -233,52 +234,70 @@ class HomePage extends StatelessWidget {
       ),
     );
   }
+
+  Widget _circle(double size, Color color) {
+    return Container(
+      width: size,
+      height: size,
+
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: color,
+      ),
+    );
+  }
 }
 
-class _StepDot extends StatelessWidget {
-  final String label;
-  final String number;
-  final bool isActive;
+class StepDot extends StatelessWidget {
 
-  const _StepDot({
-    required this.label,
-    required this.number,
-    required this.isActive,
-  });
+  final StepModel step;
+
+  const StepDot({super.key, required this.step});
 
   @override
   Widget build(BuildContext context) {
+
     return Column(
       children: [
+
         Container(
           width: 28,
           height: 28,
+
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: isActive
-                ? const Color(0xFFC9A84C)
-                : const Color(0xFF1A3A5C),
+
+            color: step.isActive
+                ? AppColors.secondary
+                : AppColors.darkBlue,
+
             border: Border.all(
-              color: const Color(0xFFC9A84C).withOpacity(0.4),
+              color: AppColors.secondary.withOpacity(0.4),
               width: 1.5,
             ),
           ),
+
           child: Center(
             child: Text(
-              number,
+              step.number,
+
               style: TextStyle(
-                color: isActive
-                    ? const Color(0xFF0A2342)
-                    : const Color(0xFFC9A84C),
+                color: step.isActive
+                    ? AppColors.primary
+                    : AppColors.secondary,
+
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
+
         const SizedBox(height: 4),
+
         Text(
-          label,
+          step.label,
+
           style: TextStyle(
             color: Colors.white.withOpacity(0.45),
             fontSize: 9,
@@ -289,14 +308,19 @@ class _StepDot extends StatelessWidget {
   }
 }
 
-class _StepLine extends StatelessWidget {
+class StepLine extends StatelessWidget {
+
+  const StepLine({super.key});
+
   @override
   Widget build(BuildContext context) {
+
     return Expanded(
       child: Container(
         height: 1,
         margin: const EdgeInsets.only(bottom: 16),
-        color: const Color(0xFFC9A84C).withOpacity(0.25),
+
+        color: AppColors.secondary.withOpacity(0.25),
       ),
     );
   }

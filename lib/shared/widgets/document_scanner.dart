@@ -2,7 +2,7 @@ import 'dart:io'; // Permet de manipuler des fichiers (File)
 import 'package:flutter/material.dart'; // Widgets Flutter (Scaffold, Container, etc.)
 import 'package:camera/camera.dart'; // Plugin Flutter pour accéder à la caméra
 import 'package:image/image.dart' as img; // Librairie pour manipuler les images (crop, resize, etc.)
-import 'package:pfe_flutter/features/face_detection/camera_service.dart'; // Service personnalisé pour gérer la caméra
+import 'package:pfe_flutter/shared/services/camera_service.dart'; // Service personnalisé pour gérer la caméra
 
 // Page qui permet de scanner une carte et capturer son image
 class CardScannerPage extends StatefulWidget {
