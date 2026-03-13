@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:pfe_flutter/features/adresse/views/address_page.dart';
 import 'package:pfe_flutter/features/identification/view_model/identification_view_model.dart';
 import 'package:pfe_flutter/shared/app_colors.dart';
-import 'package:pfe_flutter/features/mieux_vous_connaitre/views/mieux_vous_connaitre_page.dart';
+import 'package:pfe_flutter/shared/widgets/header_band.dart';
+import 'package:pfe_flutter/shared/widgets/page_header.dart';
+import 'package:pfe_flutter/shared/widgets/primary_button.dart';
 
 class IdentificationPage extends StatefulWidget {
   const IdentificationPage({super.key});
@@ -47,7 +50,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
       context: context,
       initialDate: DateTime(1990),
       firstDate: DateTime(1920),
-      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18)),
+      lastDate: DateTime.now().subtract(const Duration(days: 365 * 18 )),
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
@@ -78,100 +81,19 @@ class _IdentificationPageState extends State<IdentificationPage> {
       body: Stack(
         children: [
           // Bande haute navy
-          Container(
-            height: 220,
-            decoration: BoxDecoration(
-              color: AppColors.primary,
-              borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(32),
-                bottomRight: Radius.circular(32),
-              ),
-            ),
-          ),
+          HeaderBand(),
 
           SafeArea(
             child: Column(
               children: [
                 // AppBar personnalisée
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 12),
-                  child: Row(
-                    children: [
-                      GestureDetector(
-                        onTap: () => Navigator.pop(context),
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.12),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: const Icon(
-                            Icons.arrow_back_ios_new_rounded,
-                            color: Colors.white,
-                            size: 18,
-                          ),
-                        ),
-                      ),
-                      const Spacer(),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.secondary.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(color: AppColors.secondary.withOpacity(0.5)),
-                        ),
-                        child: const Text(
-                          'Étape 1 / 4',
-                          style: TextStyle(
-                            color: AppColors.secondary,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Titre
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 24.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Identification',
-                        style: TextStyle(
-                          color: Colors.white,
-                          fontSize: 28,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: -0.5,
-                        ),
-                      ),
-                      SizedBox(height: 4),
-                      Text(
-                        'Veuillez renseigner vos informations personnelles',
-                        style: TextStyle(color: Colors.white60, fontSize: 13),
-                      ),
-                    ],
-                  ),
-                ),
-
-                const SizedBox(height: 16),
-
-                // Progress bar
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(4),
-                    child: LinearProgressIndicator(
-                      value: 0.25,
-                      backgroundColor: Colors.white.withOpacity(0.15),
-                      valueColor: const AlwaysStoppedAnimation<Color>(AppColors.secondary),
-                      minHeight: 4,
-                    ),
-                  ),
-                ),
+PageHeader(
+        currentStep: 1,
+        totalSteps: 8,
+        title: 'Identification',
+        subtitle: 'Veuillez renseigner vos informations personnelles',
+        onBack: () => Navigator.pop(context),
+      ),
 
                 const SizedBox(height: 20),
 
@@ -346,52 +268,16 @@ class _IdentificationPageState extends State<IdentificationPage> {
                           const SizedBox(height: 32),
 
                           // Bouton Continuer
-                          SizedBox(
-                            width: double.infinity,
-                            height: 54,
-                            child: ElevatedButton(
-                              onPressed: state.accepteMentions
-                                  ? () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const MieuxVousConnaitrePage(),
-                                        ),
-                                      );
-                                    }
-                                  : null,
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: AppColors.primary,
-                                disabledBackgroundColor: const Color(0xFFCCCCCC),
-                                foregroundColor: Colors.white,
-                                elevation: 0,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(16),
-                                ),
-                              ),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  const Text(
-                                    'Continuer',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.bold,
-                                      letterSpacing: 0.3,
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Icon(
-                                    Icons.arrow_forward_rounded,
-                                    size: 18,
-                                    color: state.accepteMentions
-                                        ? AppColors.secondary
-                                        : Colors.white54,
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
+                          PrimaryButton(
+  text: 'Continuer',
+  enabled: state.accepteMentions,
+  onPressed: () {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const AdressePage()),
+    );
+  },
+)
                         ],
                       ),
                     ),

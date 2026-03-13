@@ -141,23 +141,30 @@ class HomePage extends StatelessWidget {
                      const SizedBox(height: 40),
 
                   /// steps indicator
-                  Row(
-                    children: [
+                 SizedBox(
+  height: 60,
+  child: ListView.builder(
+    scrollDirection: Axis.horizontal,
+    itemCount: vm.steps.length,
+    itemBuilder: (context, index) {
 
-                      StepDot(step: vm.steps[0]),
-                      const StepLine(),
+      final step = vm.steps[index];
 
-                      StepDot(step: vm.steps[1]),
-                      const StepLine(),
+      return Row(
+        children: [
 
-                      StepDot(step: vm.steps[2]),
-                      const StepLine(),
+          StepDot(step: step),
 
-                      StepDot(step: vm.steps[3]),
-
-                    ],
-                  ),
-
+          if (index != vm.steps.length - 1)
+            const SizedBox(
+              width: 40,
+              child: StepLine(),
+            ),
+        ],
+      );
+    },
+  ),
+),
                   const SizedBox(height: 44),
 
                   /// bouton
@@ -315,13 +322,11 @@ class StepLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
 
-    return Expanded(
-      child: Container(
-        height: 1,
-        margin: const EdgeInsets.only(bottom: 16),
-
-        color: AppColors.secondary.withOpacity(0.25),
-      ),
+    return Container(
+      width: 40, // largeur de la ligne
+      height: 1,
+      margin: const EdgeInsets.only(bottom: 16),
+      color: AppColors.secondary.withOpacity(0.25),
     );
   }
 }

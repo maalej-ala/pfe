@@ -82,7 +82,13 @@ class _TextRecognitionView extends StatelessWidget {
             else if (vm.result != null)
               Expanded(
                 child: SingleChildScrollView(
-                  child: Text(vm.result!.text),
+                  child: Column(
+  crossAxisAlignment: CrossAxisAlignment.start,
+  children: vm.result!.blocks
+      .expand((block) => block.lines)
+      .map((line) => Text(line.text))
+      .toList(),
+)
                 ),
               )
           ],

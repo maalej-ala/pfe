@@ -14,7 +14,7 @@ class TextRecognitionViewModel extends ChangeNotifier {
 
   /// STATE
   File? selectedImage;
-  TextRecognitionModel? result;
+  RecognizedText? result;
   bool isProcessing = false;
 
   /// Pick image from gallery
@@ -68,23 +68,15 @@ class TextRecognitionViewModel extends ChangeNotifier {
       final RecognizedText recognizedText =
           await _textRecognizer.processImage(inputImage);
 
-      result = TextRecognitionModel(
-        text: recognizedText.text.isNotEmpty
-            ? recognizedText.text
-            : "Aucun texte détecté",
-      );
+ result = recognizedText;
 
     } catch (e) {
-
-      result = TextRecognitionModel(
-        text: "Erreur : $e",
-      );
-
-    }
+      debugPrint("Error recognizing text: $e");
+    } finally {
 
     isProcessing = false;
     notifyListeners();
-  }
+  }}
 
   /// Dispose
   void disposeRecognizer() {
