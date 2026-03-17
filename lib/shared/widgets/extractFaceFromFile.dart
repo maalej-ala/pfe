@@ -1,4 +1,9 @@
-  import 'dart:io';
+  
+  
+  
+////////////////supprimer cette page //////////////////////////  
+/// Cette page est un widget de test pour extraire le visage d'une image scannée. Elle utilise la caméra pour scanner un document, puis utilise le service de détection de visage pour extraire le visage de l'image scannée.
+import 'dart:io';
   import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
   import 'package:pfe_flutter/shared/services/face_detection_service.dart';
