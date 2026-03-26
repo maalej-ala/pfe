@@ -22,6 +22,7 @@ class FaceCaptureViewModel extends ChangeNotifier {
   bool _isDetecting = false;
   bool _isCapturing = false;
 
+
   Future<void> initialize() async {
     await _setupCamera();
   }
@@ -110,38 +111,68 @@ class FaceCaptureViewModel extends ChangeNotifier {
   }
 
   Future<void> _capturePhotoForDirection(String direction) async {
-    final ctrl = _cameraService.controller;
-    if (ctrl == null || !ctrl.value.isInitialized || _isCapturing) return;
+  final ctrl = _cameraService.controller;
+  if (ctrl == null || !ctrl.value.isInitialized) return;
 
-    _isCapturing = true;
-    try {
-      await Future.delayed(const Duration(milliseconds: 300));
-      final file = await ctrl.takePicture();
+  // 🔥 Bloque uniquement si capture en cours
+  if (_isCapturing) return;
 
-      File? extractedFace;
-      if (direction == 'Front') {
-        extractedFace = await _faceService.extractFaceFromFile(File(file.path));
-      }
+  _isCapturing = true;
 
-      if (direction == 'Front') {
+  try {
+    await Future.delayed(const Duration(milliseconds: 300));
+
+    final file = await ctrl.takePicture();
+
+    File? extractedFace;
+
+    if (direction == 'Front') {
+      extractedFace =
+          await _faceService.extractFaceFromFile(File(file.path));
+    }
+
+    // 🔥 Remplacement DIRECT (pas de vérification)
+    switch (direction) {
+      case 'Front':
         _updateState(_state.copyWith(
           facePhotoPath: file.path,
           frontFaceExtracted: extractedFace,
         ));
-      } else if (direction == 'Gauche') {
-        _updateState(_state.copyWith(gauchePhotoPath: file.path));
-      } else if (direction == 'Droite') {
-        _updateState(_state.copyWith(droitePhotoPath: file.path));
-      }
+        break;
 
-      debugPrint('Photo prise pour $direction: ${file.path}');
-    } catch (e) {
-      debugPrint('Erreur lors de la capture: $e');
-    } finally {
-      _isCapturing = false;
+      case 'Gauche':
+        _updateState(_state.copyWith(
+          gauchePhotoPath: file.path,
+        ));
+        break;
+
+      case 'Droite':
+        _updateState(_state.copyWith(
+          droitePhotoPath: file.path,
+        ));
+        break;
     }
+
+    debugPrint('Photo remplacée pour $direction: ${file.path}');
+  } catch (e) {
+    debugPrint('Erreur lors de la capture: $e');
+  } finally {
+    _isCapturing = false;
+  }
+}
+Future<void> capturePhotoForCurrentDirection() async {
+  final direction = _state.faceDirection;
+
+  if (direction == null ||
+      direction == 'Aucun visage détecté' ||
+      direction == 'Positionnez le visage dans le cercle' ||
+      direction == 'Erreur de détection') {
+    debugPrint("Direction invalide");
+    return;
   }
 
+  await _capturePhotoForDirection(direction);
+}
   void _updateState(FaceCaptureState newState) {
     _state = newState;
     notifyListeners();

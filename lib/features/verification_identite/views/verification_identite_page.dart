@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
 import 'package:pfe_flutter/shared/app_colors.dart';
 import 'package:pfe_flutter/features/3photo/view/take3_photo_page.dart';
 import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.dart';
@@ -81,8 +82,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
       );
       return;
     }
-    Navigator.pop(context, _viewModel.state);
-  }
+Navigator.push(context, MaterialPageRoute(builder: (_) => const MotDePassePage()));  }
 
   @override
   Widget build(BuildContext context) {
@@ -352,7 +352,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
 
                       const SizedBox(height: 28),
 
-                      PrimaryButton(text:'Soumettre', onPressed: _onSoumettre, enabled: state.isValid),
+                      PrimaryButton(text:'Continuer', onPressed: _onSoumettre, enabled: state.isValid),
                       const SizedBox(height: 32),
                     ],
                   ),
