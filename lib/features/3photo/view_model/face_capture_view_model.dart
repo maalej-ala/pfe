@@ -22,7 +22,9 @@ class FaceCaptureViewModel extends ChangeNotifier {
   bool _isDetecting = false;
   bool _isCapturing = false;
 
-
+  LightLevel _lightLevel = LightLevel.good;
+  final double _minBrightness = 50.0;  // ajustable selon besoin
+  final double _maxBrightness = 200.0; // ajustable selon besoin
   Future<void> initialize() async {
     await _setupCamera();
   }
@@ -39,77 +41,108 @@ class FaceCaptureViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void _processCameraImage(InputImage inputImage) async {
-    if (_isDetecting) return;
-    _isDetecting = true;
+ // ── Calcul luminosité depuis le plan Y (YUV420) ────────────
 
-    try {
-      final faces = await _faceService.getFaces(inputImage);
 
-      if (faces.isNotEmpty) {
-        final face = faces.first;
-        final faceRect = face.boundingBox;
 
-        final imageWidth = inputImage.metadata?.size.width ?? 0;
-        final imageHeight = inputImage.metadata?.size.height ?? 0;
-        const previewWidth = 300.0;
-        const previewHeight = 400.0;
+  void _processCameraImage(InputImage inputImage, double brightness) async {
+  if (_isDetecting) return;
+  _isDetecting = true;
 
-        if (imageWidth == 0 || imageHeight == 0) {
-          _isDetecting = false;
-          return;
-        }
+  try {
+    // ── 1. Vérification luminosité ─────────────────────────
+LightLevel newLevel;
+if (brightness > _minBrightness) {
+  newLevel = LightLevel.tooDark;
+} else if (brightness > _maxBrightness) {
+  newLevel = LightLevel.tooLight;
+} else {
+  newLevel = LightLevel.good;
+}
 
-        final scaleX = previewWidth / imageWidth;
-        final scaleY = previewHeight / imageHeight;
+if (newLevel != _lightLevel) {
+  _lightLevel = newLevel;
+  notifyListeners();
+}
 
-        final faceCenterX = faceRect.center.dx * scaleX;
-        final faceCenterY = faceRect.center.dy * scaleY;
 
-        const circleCenterX = previewWidth / 2;
-        const circleCenterY = previewHeight / 2;
-        const circleRadius = 100.0;
 
-        final distance = sqrt(
-          pow(faceCenterX - circleCenterX, 2) +
-              pow(faceCenterY - circleCenterY, 2),
-        );
+    if (_lightLevel == LightLevel.tooDark) {
+      _updateState(_state.copyWith(
+          faceDirection: '(luminosité act: ${brightness.toStringAsFixed(1)})'));
+    } else if (_lightLevel == LightLevel.tooLight) {
+      _updateState(_state.copyWith(
+          faceDirection: 'réduisez la lumière'));
+    } else {
+    // ── 2. Détection des visages ──────────────────────────
+    final faces = await _faceService.getFaces(inputImage);
 
-        final faceWidth = faceRect.width * scaleX;
-        final faceHeight = faceRect.height * scaleY;
-        final faceRadius = (faceWidth + faceHeight) / 4;
+    if (faces.isNotEmpty) {
+      final face = faces.first;
+      final faceRect = face.boundingBox;
 
-        final isInCircle = faceWidth > circleRadius * 1.5
-            ? distance <= circleRadius * 0.8
-            : distance <= circleRadius + faceRadius * 0.5;
+      final imageWidth = inputImage.metadata?.size.width ?? 0;
+      final imageHeight = inputImage.metadata?.size.height ?? 0;
+      const previewWidth = 300.0;
+      const previewHeight = 400.0;
 
-        if (isInCircle) {
-          final direction = await _faceService.detectFaceDirection(inputImage);
-
-          // Capture automatique
-          if (direction == 'Front' && _state.facePhotoPath == null) {
-            await _capturePhotoForDirection('Front');
-          } else if (direction == 'Gauche' && _state.gauchePhotoPath == null) {
-            await _capturePhotoForDirection('Gauche');
-          } else if (direction == 'Droite' && _state.droitePhotoPath == null) {
-            await _capturePhotoForDirection('Droite');
-          }
-
-          _updateState(_state.copyWith(faceDirection: direction));
-        } else {
-          _updateState(_state.copyWith(faceDirection: 'Positionnez le visage dans le cercle'));
-        }
-      } else {
-        _updateState(_state.copyWith(faceDirection: 'Aucun visage détecté'));
+      if (imageWidth == 0 || imageHeight == 0) {
+        _isDetecting = false;
+        return;
       }
-    } catch (e) {
-      debugPrint("Erreur MLKit: $e");
-      _updateState(_state.copyWith(faceDirection: 'Erreur de détection'));
-    } finally {
-      _isDetecting = false;
-    }
-  }
 
+      final scaleX = previewWidth / imageWidth;
+      final scaleY = previewHeight / imageHeight;
+
+      final faceCenterX = faceRect.center.dx * scaleX;
+      final faceCenterY = faceRect.center.dy * scaleY;
+
+      const circleCenterX = previewWidth / 2;
+      const circleCenterY = previewHeight / 2;
+      const circleRadius = 100.0;
+
+      final distance = sqrt(
+        pow(faceCenterX - circleCenterX, 2) +
+            pow(faceCenterY - circleCenterY, 2),
+      );
+
+      final faceWidth = faceRect.width * scaleX;
+      final faceHeight = faceRect.height * scaleY;
+      final faceRadius = (faceWidth + faceHeight) / 4;
+
+      final isInCircle = faceWidth > circleRadius * 1.5
+          ? distance <= circleRadius * 0.8
+          : distance <= circleRadius + faceRadius * 0.5;
+
+     if (isInCircle) {
+    final direction = await _faceService.detectFaceDirection(inputImage);
+
+    // ── Vérification luminosité et messages utilisateur ──
+     {
+      // Luminosité bonne → capture automatique
+      if (direction == 'Front' && _state.facePhotoPath == null) {
+        await _capturePhotoForDirection('Front');
+      } else if (direction == 'Gauche' && _state.gauchePhotoPath == null) {
+        await _capturePhotoForDirection('Gauche');
+      } else if (direction == 'Droite' && _state.droitePhotoPath == null) {
+        await _capturePhotoForDirection('Droite');
+      }
+
+      _updateState(_state.copyWith(faceDirection: direction));
+    }
+  } else {
+    _updateState(_state.copyWith(faceDirection: 'Positionnez le visage dans le cercle'));
+  }
+} else {
+  _updateState(_state.copyWith(faceDirection: 'Aucun visage détecté'));
+}}
+  } catch (e) {
+    debugPrint("Erreur MLKit: $e");
+    _updateState(_state.copyWith(faceDirection: 'Erreur de détection'));
+  } finally {
+    _isDetecting = false;
+  }
+}
   Future<void> _capturePhotoForDirection(String direction) async {
   final ctrl = _cameraService.controller;
   if (ctrl == null || !ctrl.value.isInitialized) return;

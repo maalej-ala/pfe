@@ -760,7 +760,7 @@ class _PhotosGrid extends StatelessWidget {
                 fontWeight: FontWeight.w600,
               ),
             ),
-          ],
+          ],  
         );
       }).toList(),
     );

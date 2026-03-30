@@ -1,5 +1,10 @@
 import 'dart:io';
 
+enum LightLevel {
+  tooDark,
+  good,
+  tooLight,
+}
 class FaceCaptureState {
   final String faceDirection;
   final String? facePhotoPath;

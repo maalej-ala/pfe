@@ -268,15 +268,24 @@ PageHeader(
                           const SizedBox(height: 32),
 
                           // Bouton Continuer
-                          PrimaryButton(
+PrimaryButton(
   text: 'Continuer',
   enabled: state.accepteMentions,
-  onPressed: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => const AdressePage()),
-    );
-  },
+  onPressed: state.accepteMentions
+      ? () async {
+          try {
+            // await _viewModel.submitIdentification(); // ✅ utiliser le bon nom
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const AdressePage()),
+            );
+          } catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text('Erreur : $e')),
+            );
+          }
+        }
+      : null, // Si pas accepté, bouton désactivé
 )
                         ],
                       ),

@@ -26,19 +26,37 @@ class CameraService {
   }
 
   /// Start image stream (cross-platform)
-  void startImageStream(Function(InputImage) onImage) {
+  void startImageStream(Function(InputImage, double) onImage) {
     if (_isStreaming || controller == null) return;
 
     _isStreaming = true;
 
     controller!.startImageStream((CameraImage image) {
+      final brightness = computeBrightness(image);
       final inputImage = _convertCameraImage(image);
       if (inputImage != null) {
-        onImage(inputImage);
+        onImage(inputImage, brightness);
       }
     });
   }
+  ////////////// calculer si la lumiere est bon 
+double computeBrightness(CameraImage image) {
+  try {
+    final yPlane = image.planes[0]; // plan Y (luminosité)
+    final bytes = yPlane.bytes;
 
+    int sum = 0;
+    int count = 0;
+    for (int i = 0; i < bytes.length; i += 16) { // échantillonnage 1 pixel sur 16
+      sum += bytes[i];
+      count++;
+    }
+
+    return count > 0 ? sum / count : 128.0;
+  } catch (_) {
+    return 128.0; // valeur neutre
+  }
+}
   /// Stop image stream
   Future<void> stopImageStream() async {
     if (!_isStreaming || controller == null) return;
