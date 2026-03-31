@@ -1,5 +1,5 @@
+// primary_button.dart
 import 'package:flutter/material.dart';
-import 'package:pfe_flutter/shared/app_colors.dart';
 
 class PrimaryButton extends StatelessWidget {
   final String text;
@@ -17,20 +17,15 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+
     return SizedBox(
       width: double.infinity,
       height: 54,
       child: ElevatedButton(
         onPressed: enabled ? onPressed : null,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          disabledBackgroundColor: const Color(0xFFCCCCCC),
-          foregroundColor: Colors.white,
-          elevation: 0,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-        ),
+        // ElevatedButton picks up elevatedButtonTheme from AppTheme
+        // automatically. We only override the icon color here.
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
@@ -47,7 +42,10 @@ class PrimaryButton extends StatelessWidget {
               Icon(
                 icon,
                 size: 18,
-                color: enabled ? AppColors.secondary : Colors.white54,
+                // Gold accent when active, muted when disabled
+                color: enabled
+                    ? colorScheme.secondary
+                    : Colors.white54,
               ),
             ],
           ],

@@ -32,10 +32,14 @@ class IdentificationViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void updateTel(String value) {
-    _state = _state.copyWith(tel: value);
-    notifyListeners();
-  }
+void updatePhone(String full, String code, String number) {
+  _state = _state.copyWith(
+    fullPhone: full,
+    countryCode: code,
+    phoneNumber: number,
+  );
+  notifyListeners();
+}
 
   void updateEmail(String value) {
     _state = _state.copyWith(email: value);
@@ -67,7 +71,7 @@ class IdentificationViewModel extends ChangeNotifier {
           'nom': _state.nom,
           'prenom': _state.prenom,
           'email': _state.email,
-          'telephone': _state.tel,
+          'telephone': _state.fullPhone,
   'dateNaissance': formatDateForBackend(_state.dateNaissance), // ✅ format ISO
           'accepteMentions': _state.accepteMentions,
         }),

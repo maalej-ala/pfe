@@ -1,5 +1,5 @@
+// header_band.dart
 import 'package:flutter/material.dart';
-import 'package:pfe_flutter/shared/app_colors.dart';
 
 class HeaderBand extends StatelessWidget {
   final double height;
@@ -7,10 +7,15 @@ class HeaderBand extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // In light mode → navy primary; in dark mode → dark surface card color
+    final color = Theme.of(context).brightness == Brightness.dark
+        ? Theme.of(context).colorScheme.surface
+        : Theme.of(context).colorScheme.primary;
+
     return Container(
       height: height,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        color: color,
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(32),
           bottomRight: Radius.circular(32),

@@ -1,7 +1,5 @@
-// view/mot_de_passe_page.dart
-
+// mot_de_passe_page.dart
 import 'package:flutter/material.dart';
-import 'package:pfe_flutter/shared/app_colors.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
 import 'package:pfe_flutter/shared/widgets/page_header.dart';
 import 'package:pfe_flutter/shared/widgets/primary_button.dart';
@@ -60,7 +58,7 @@ class _MotDePassePageState extends State<MotDePassePage> {
     final state = _viewModel.state;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF5F3EE),
+      // scaffoldBackgroundColor from AppTheme
       body: Stack(
         children: [
           HeaderBand(),
@@ -78,7 +76,7 @@ class _MotDePassePageState extends State<MotDePassePage> {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      // ── Carte création mot de passe ──────────────────
+                      // ── Password creation card ──────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,7 +87,6 @@ class _MotDePassePageState extends State<MotDePassePage> {
                             ),
                             const SizedBox(height: 20),
 
-                            // Champ mot de passe
                             const _Label('Mot de passe'),
                             const SizedBox(height: 8),
                             _PasswordInput(
@@ -99,17 +96,14 @@ class _MotDePassePageState extends State<MotDePassePage> {
                               onChanged: _viewModel.updateMotDePasse,
                               onToggleVisibility:
                                   _viewModel.toggleMotDePasseVisible,
-                              hasError: false,
                             ),
                             const SizedBox(height: 12),
 
-                            // Barre de force
                             if (state.motDePasse.isNotEmpty)
                               _StrengthBar(strength: state.strength),
 
                             const SizedBox(height: 20),
 
-                            // Champ confirmation
                             const _Label('Confirmer le mot de passe'),
                             const SizedBox(height: 8),
                             _PasswordInput(
@@ -123,20 +117,22 @@ class _MotDePassePageState extends State<MotDePassePage> {
                               isSuccess: state.isConfirmationMatch,
                             ),
 
-                            // Message erreur confirmation
                             if (state.isConfirmationError) ...[
                               const SizedBox(height: 6),
-                              const Row(
+                              Row(
                                 children: [
-                                  Icon(Icons.error_outline,
+                                  const Icon(Icons.error_outline,
                                       size: 14, color: Colors.redAccent),
-                                  SizedBox(width: 4),
+                                  const SizedBox(width: 4),
                                   Text(
                                     'Les mots de passe ne correspondent pas',
-                                    style: TextStyle(
-                                      color: Colors.redAccent,
-                                      fontSize: 12,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Colors.redAccent,
+                                          height: 1,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -147,15 +143,17 @@ class _MotDePassePageState extends State<MotDePassePage> {
                               Row(
                                 children: [
                                   Icon(Icons.check_circle_outline,
-                                      size: 14,
-                                      color: Colors.green.shade600),
+                                      size: 14, color: Colors.green.shade600),
                                   const SizedBox(width: 4),
                                   Text(
                                     'Les mots de passe correspondent',
-                                    style: TextStyle(
-                                      color: Colors.green.shade600,
-                                      fontSize: 12,
-                                    ),
+                                    style: Theme.of(context)
+                                        .textTheme
+                                        .bodySmall
+                                        ?.copyWith(
+                                          color: Colors.green.shade600,
+                                          height: 1,
+                                        ),
                                   ),
                                 ],
                               ),
@@ -166,7 +164,7 @@ class _MotDePassePageState extends State<MotDePassePage> {
 
                       const SizedBox(height: 16),
 
-                      // ── Carte critères ────────────────────────────────
+                      // ── Criteria card ───────────────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,25 +175,20 @@ class _MotDePassePageState extends State<MotDePassePage> {
                             ),
                             const SizedBox(height: 16),
                             _Criterion(
-                              label: 'Au moins 8 caractères',
-                              met: state.hasMinLength,
-                            ),
+                                label: 'Au moins 8 caractères',
+                                met: state.hasMinLength),
                             _Criterion(
-                              label: 'Une lettre majuscule (A–Z)',
-                              met: state.hasUppercase,
-                            ),
+                                label: 'Une lettre majuscule (A–Z)',
+                                met: state.hasUppercase),
                             _Criterion(
-                              label: 'Une lettre minuscule (a–z)',
-                              met: state.hasLowercase,
-                            ),
+                                label: 'Une lettre minuscule (a–z)',
+                                met: state.hasLowercase),
                             _Criterion(
-                              label: 'Un chiffre (0–9)',
-                              met: state.hasDigit,
-                            ),
+                                label: 'Un chiffre (0–9)',
+                                met: state.hasDigit),
                             _Criterion(
-                              label: 'Un caractère spécial (!@#\$...)',
-                              met: state.hasSpecial,
-                            ),
+                                label: r'Un caractère spécial (!@#$...)',
+                                met: state.hasSpecial),
                           ],
                         ),
                       ),
@@ -207,7 +200,6 @@ class _MotDePassePageState extends State<MotDePassePage> {
                         onPressed: _onSoumettre,
                         enabled: state.isValid,
                       ),
-
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -221,79 +213,70 @@ class _MotDePassePageState extends State<MotDePassePage> {
   }
 }
 
-// ═══════════════════════════════════════════════════════════════
-//  WIDGETS PRIVÉS
-// ═══════════════════════════════════════════════════════════════
-
+// ── Shared card ──────────────────────────────────────────────
 class _FormCard extends StatelessWidget {
   final Widget child;
   const _FormCard({required this.child});
 
   @override
-  Widget build(BuildContext context) => Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withOpacity(0.07),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        child: child,
-      );
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.07),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
 }
 
+// ── Section title with icon badge ────────────────────────────
 class _SectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
   const _SectionTitle({required this.icon, required this.title});
 
   @override
-  Widget build(BuildContext context) => Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: AppColors.primary.withOpacity(0.08),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, size: 18, color: AppColors.primary),
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Row(
+      children: [
+        Container(
+          width: 36,
+          height: 36,
+          decoration: BoxDecoration(
+            color: colorScheme.primary.withOpacity(0.08),
+            borderRadius: BorderRadius.circular(10),
           ),
-          const SizedBox(width: 10),
-          Text(
-            title,
-            style: const TextStyle(
-              color: Color(0xFF0A2342),
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      );
+          child: Icon(icon, size: 18, color: colorScheme.primary),
+        ),
+        const SizedBox(width: 10),
+        Text(title, style: Theme.of(context).textTheme.titleMedium),
+      ],
+    );
+  }
 }
 
+// ── Field label ──────────────────────────────────────────────
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
 
   @override
-  Widget build(BuildContext context) => Text(
-        text,
-        style: const TextStyle(
-          color: Color(0xFF0A2342),
-          fontSize: 13,
-          fontWeight: FontWeight.w600,
-          letterSpacing: 0.1,
-        ),
-      );
+  Widget build(BuildContext context) =>
+      Text(text, style: Theme.of(context).textTheme.labelMedium);
 }
 
-// ── Champ mot de passe avec toggle visibilité ─────────────────
+// ── Password field ───────────────────────────────────────────
 class _PasswordInput extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -315,25 +298,26 @@ class _PasswordInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final iconColor = Theme.of(context).iconTheme.color;
+
+    // Semantic border color: error → red, success → green, default → theme
     Color borderColor = const Color(0xFFE5E0D5);
     if (hasError) borderColor = Colors.redAccent;
     if (isSuccess) borderColor = Colors.green;
+
+    Color? fillColor = const Color(0xFFF9F8F5);
+    if (hasError) fillColor = Colors.red.withOpacity(0.03);
+    if (isSuccess) fillColor = Colors.green.withOpacity(0.03);
 
     return TextFormField(
       controller: controller,
       obscureText: !isVisible,
       onChanged: onChanged,
-      style: const TextStyle(
-        fontSize: 14.5,
-        color: Color(0xFF0A2342),
-        fontWeight: FontWeight.w500,
-      ),
+      style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle:
-            const TextStyle(color: Color(0xFFAAAAAA), fontSize: 13.5),
-        prefixIcon: const Icon(Icons.lock_outline,
-            size: 19, color: Color(0xFF8899AA)),
+        prefixIcon:
+            Icon(Icons.lock_outline, size: 19, color: iconColor),
         suffixIcon: GestureDetector(
           onTap: onToggleVisibility,
           child: Icon(
@@ -341,21 +325,11 @@ class _PasswordInput extends StatelessWidget {
                 ? Icons.visibility_off_outlined
                 : Icons.visibility_outlined,
             size: 19,
-            color: const Color(0xFF8899AA),
+            color: iconColor,
           ),
         ),
-        filled: true,
-        fillColor: hasError
-            ? Colors.red.withOpacity(0.03)
-            : isSuccess
-                ? Colors.green.withOpacity(0.03)
-                : const Color(0xFFF9F8F5),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
-        ),
+        // Override theme fill/borders only for error/success states
+        fillColor: fillColor,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide(color: borderColor),
@@ -367,7 +341,7 @@ class _PasswordInput extends StatelessWidget {
                 ? Colors.redAccent
                 : isSuccess
                     ? Colors.green
-                    : AppColors.secondary,
+                    : Theme.of(context).colorScheme.secondary,
             width: 1.5,
           ),
         ),
@@ -376,7 +350,7 @@ class _PasswordInput extends StatelessWidget {
   }
 }
 
-// ── Barre de force du mot de passe ────────────────────────────
+// ── Strength bar ─────────────────────────────────────────────
 class _StrengthBar extends StatelessWidget {
   final PasswordStrength strength;
   const _StrengthBar({required this.strength});
@@ -395,13 +369,12 @@ class _StrengthBar extends StatelessWidget {
       children: [
         Row(
           children: List.generate(3, (i) {
-            final filled = i < segments;
             return Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
                 height: 5,
                 decoration: BoxDecoration(
-                  color: filled ? color : const Color(0xFFE5E0D5),
+                  color: i < segments ? color : const Color(0xFFE5E0D5),
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
@@ -412,22 +385,21 @@ class _StrengthBar extends StatelessWidget {
         Row(
           children: [
             Icon(
-              strength == PasswordStrength.strong
+              strength == PasswordStrength.strong ||
+                      strength == PasswordStrength.medium
                   ? Icons.shield_outlined
-                  : strength == PasswordStrength.medium
-                      ? Icons.shield_outlined
-                      : Icons.warning_amber_outlined,
+                  : Icons.warning_amber_outlined,
               size: 13,
               color: color,
             ),
             const SizedBox(width: 4),
             Text(
               'Mot de passe $label',
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
+              style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w600,
+                    height: 1,
+                  ),
             ),
           ],
         ),
@@ -436,7 +408,7 @@ class _StrengthBar extends StatelessWidget {
   }
 }
 
-// ── Critère individuel ────────────────────────────────────────
+// ── Single criterion row ─────────────────────────────────────
 class _Criterion extends StatelessWidget {
   final String label;
   final bool met;
@@ -470,14 +442,13 @@ class _Criterion extends StatelessWidget {
             const SizedBox(width: 10),
             Text(
               label,
-              style: TextStyle(
-                fontSize: 13,
-                color: met
-                    ? const Color(0xFF0A2342)
-                    : const Color(0xFF888888),
-                fontWeight:
-                    met ? FontWeight.w600 : FontWeight.normal,
-              ),
+              style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                    color: met
+                        ? Theme.of(context).colorScheme.primary
+                        : const Color(0xFF888888),
+                    fontWeight:
+                        met ? FontWeight.w600 : FontWeight.normal,
+                  ),
             ),
           ],
         ),

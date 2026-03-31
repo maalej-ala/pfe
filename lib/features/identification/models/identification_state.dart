@@ -3,7 +3,11 @@ class IdentificationState {
   final bool accepteMentions;
   final String nom;
   final String prenom;
-  final String tel;
+
+  final String fullPhone;     // ✅ +21612345678
+  final String countryCode;   // ✅ +216
+  final String phoneNumber;   // ✅ 12345678
+
   final String email;
   final String dateNaissance;
 
@@ -12,7 +16,9 @@ class IdentificationState {
     this.accepteMentions = false,
     this.nom = '',
     this.prenom = '',
-    this.tel = '',
+    this.fullPhone = '',
+    this.countryCode = '',
+    this.phoneNumber = '',
     this.email = '',
     this.dateNaissance = '',
   });
@@ -22,7 +28,9 @@ class IdentificationState {
     bool? accepteMentions,
     String? nom,
     String? prenom,
-    String? tel,
+    String? fullPhone,
+    String? countryCode,
+    String? phoneNumber,
     String? email,
     String? dateNaissance,
   }) {
@@ -31,7 +39,9 @@ class IdentificationState {
       accepteMentions: accepteMentions ?? this.accepteMentions,
       nom: nom ?? this.nom,
       prenom: prenom ?? this.prenom,
-      tel: tel ?? this.tel,
+      fullPhone: fullPhone ?? this.fullPhone,
+      countryCode: countryCode ?? this.countryCode,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
       email: email ?? this.email,
       dateNaissance: dateNaissance ?? this.dateNaissance,
     );

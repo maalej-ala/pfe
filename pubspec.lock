@@ -89,6 +89,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.19.1"
+  country_state_city:
+    dependency: "direct main"
+    description:
+      name: country_state_city
+      sha256: "400bf4f455503021d98a1f21eeec41c0aa0d7b2529ea0b07f6799ed3750513c3"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.1.6"
   cross_file:
     dependency: transitive
     description:
@@ -320,6 +328,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.2.2"
+  intl_phone_field:
+    dependency: "direct main"
+    description:
+      name: intl_phone_field
+      sha256: "73819d3dfcb68d2c85663606f6842597c3ddf6688ac777f051b17814fe767bbf"
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.2.0"
   leak_tracker:
     dependency: transitive
     description:

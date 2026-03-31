@@ -1,3 +1,4 @@
+// home_page.dart
 import 'package:flutter/material.dart';
 import 'package:pfe_flutter/features/identification/views/identification_page.dart';
 import 'package:pfe_flutter/shared/app_colors.dart';
@@ -10,67 +11,59 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     final vm = HomeViewModel();
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      backgroundColor: AppColors.primary,
-
+      // scaffoldBackgroundColor → AppColors.primary override for this page only
+      backgroundColor: colorScheme.primary,
       body: Stack(
         children: [
-
-          /// decorative circles
+          // Decorative circles — use theme colors
           Positioned(
             top: -80,
             right: -60,
             child: _circle(280, AppColors.darkBlue.withOpacity(0.6)),
           ),
-
           Positioned(
             bottom: -100,
             left: -80,
             child: _circle(320, AppColors.darkBlue.withOpacity(0.4)),
           ),
-
           Positioned(
             top: 200,
             left: -40,
-            child: _circle(160, AppColors.secondary.withOpacity(0.15)),
+            child: _circle(160, colorScheme.secondary.withOpacity(0.15)),
           ),
 
           SafeArea(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 28),
-
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-
                   const SizedBox(height: 24),
 
-                  /// logo
+                  // Logo row
                   Row(
                     children: [
-
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.secondary,
+                          color: colorScheme.secondary,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.account_balance,
-                          color: AppColors.primary,
+                          color: colorScheme.primary,
                           size: 22,
                         ),
                       ),
-
                       const SizedBox(width: 12),
-
-                      const Text(
+                      Text(
                         AppConstants.bankName,
-                        style: TextStyle(
-                          color: Colors.white,
+                        style: textTheme.titleLarge?.copyWith(
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                           letterSpacing: 0.5,
@@ -81,7 +74,7 @@ class HomePage extends StatelessWidget {
 
                   const Spacer(flex: 2),
 
-                  /// illustration centrale
+                  // Central illustration
                   Center(
                     child: Container(
                       width: 200,
@@ -90,34 +83,30 @@ class HomePage extends StatelessWidget {
                         shape: BoxShape.circle,
                         gradient: RadialGradient(
                           colors: [
-                            AppColors.secondary.withOpacity(0.3),
-                            AppColors.secondary.withOpacity(0.05),
+                            colorScheme.secondary.withOpacity(0.3),
+                            colorScheme.secondary.withOpacity(0.05),
                           ],
                         ),
                       ),
-
                       child: Center(
                         child: Container(
                           width: 130,
                           height: 130,
-
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: AppColors.cardBackground,
-
                             boxShadow: [
                               BoxShadow(
-                                color: AppColors.secondary.withOpacity(0.3),
+                                color: colorScheme.secondary.withOpacity(0.3),
                                 blurRadius: 30,
                                 spreadRadius: 5,
                               ),
                             ],
                           ),
-
-                          child: const Icon(
+                          child: Icon(
                             Icons.credit_card_rounded,
                             size: 60,
-                            color: AppColors.secondary,
+                            color: colorScheme.secondary,
                           ),
                         ),
                       ),
@@ -126,90 +115,75 @@ class HomePage extends StatelessWidget {
 
                   const Spacer(flex: 1),
 
-                  /// titre
-                 const Text( "Votre banque,\npartout avec vous.", 
-                 style: TextStyle( 
-                  color: Colors.white, 
-                  fontSize: 34, 
-                  fontWeight: FontWeight.bold, 
-                  ), ), 
-                  const SizedBox(height: 16), 
-                  Text( "Ouvrez votre compte bancaire en quelques minutes, 100% en ligne, sans vous déplacer.", 
-                  style: TextStyle( 
-                    color: Colors.white.withOpacity(0.65), 
-                    fontSize: 15, ), ),
-                     const SizedBox(height: 40),
+                  // Title
+                  Text(
+                    "Votre banque,\npartout avec vous.",
+                    style: textTheme.titleLarge?.copyWith(fontSize: 34),
+                  ),
+                  const SizedBox(height: 16),
 
-                  /// steps indicator
-                 SizedBox(
-  height: 60,
-  child: ListView.builder(
-    scrollDirection: Axis.horizontal,
-    itemCount: vm.steps.length,
-    itemBuilder: (context, index) {
+                  // Subtitle
+                  Text(
+                    "Ouvrez votre compte bancaire en quelques minutes, 100% en ligne, sans vous déplacer.",
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: Colors.white.withOpacity(0.65),
+                      fontSize: 15,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
 
-      final step = vm.steps[index];
-
-      return Row(
-        children: [
-
-          StepDot(step: step),
-
-          if (index != vm.steps.length - 1)
-            const SizedBox(
-              width: 40,
-              child: StepLine(),
-            ),
-        ],
-      );
-    },
-  ),
-),
+                  // Steps indicator
+                  SizedBox(
+                    height: 60,
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: vm.steps.length,
+                      itemBuilder: (context, index) {
+                        final step = vm.steps[index];
+                        return Row(
+                          children: [
+                            StepDot(step: step),
+                            if (index != vm.steps.length - 1)
+                              const SizedBox(width: 40, child: StepLine()),
+                          ],
+                        );
+                      },
+                    ),
+                  ),
                   const SizedBox(height: 44),
 
-                  /// bouton
+                  // CTA button — secondary (gold) background, primary text
                   SizedBox(
                     width: double.infinity,
                     height: 56,
-
                     child: ElevatedButton(
-                      onPressed: () {
-
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => const IdentificationPage(),
-                          ),
-                        );
-
-                      },
-
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.secondary,
-                        foregroundColor: AppColors.primary,
-                        elevation: 0,
-
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16),
-                        ),
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const IdentificationPage()),
                       ),
-
-                      child: const Row(
+                      // Override theme: gold bg + navy text for this one button
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: colorScheme.secondary,
+                        foregroundColor: colorScheme.primary,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16)),
+                      ),
+                      child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-
                           Text(
                             'Ouvrir un compte',
-                            style: TextStyle(
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.primary,
                               fontSize: 16,
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.3,
                             ),
                           ),
-
-                          SizedBox(width: 10),
-
-                          Icon(Icons.arrow_forward_rounded, size: 20),
+                          const SizedBox(width: 10),
+                          const Icon(Icons.arrow_forward_rounded, size: 20),
                         ],
                       ),
                     ),
@@ -217,21 +191,19 @@ class HomePage extends StatelessWidget {
 
                   const SizedBox(height: 16),
 
-                  /// secondary link
+                  // Secondary link
                   Center(
                     child: TextButton(
                       onPressed: () {},
-
                       child: Text(
                         "J'ai déjà un compte →",
-                        style: TextStyle(
+                        style: textTheme.bodyMedium?.copyWith(
                           color: Colors.white.withOpacity(0.7),
                           fontSize: 14,
                         ),
                       ),
                     ),
                   ),
-
                   const SizedBox(height: 24),
                 ],
               ),
@@ -242,73 +214,53 @@ class HomePage extends StatelessWidget {
     );
   }
 
-  Widget _circle(double size, Color color) {
-    return Container(
-      width: size,
-      height: size,
-
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: color,
-      ),
-    );
-  }
+  Widget _circle(double size, Color color) => Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(shape: BoxShape.circle, color: color),
+      );
 }
 
 class StepDot extends StatelessWidget {
-
   final StepModel step;
-
   const StepDot({super.key, required this.step});
 
   @override
   Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Column(
       children: [
-
         Container(
           width: 28,
           height: 28,
-
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-
-            color: step.isActive
-                ? AppColors.secondary
-                : AppColors.darkBlue,
-
+            color: step.isActive ? colorScheme.secondary : AppColors.darkBlue,
             border: Border.all(
-              color: AppColors.secondary.withOpacity(0.4),
+              color: colorScheme.secondary.withOpacity(0.4),
               width: 1.5,
             ),
           ),
-
           child: Center(
             child: Text(
               step.number,
-
               style: TextStyle(
                 color: step.isActive
-                    ? AppColors.primary
-                    : AppColors.secondary,
-
+                    ? colorScheme.primary
+                    : colorScheme.secondary,
                 fontSize: 11,
                 fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ),
-
         const SizedBox(height: 4),
-
         Text(
           step.label,
-
-          style: TextStyle(
-            color: Colors.white.withOpacity(0.45),
-            fontSize: 9,
-          ),
+          style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                color: Colors.white.withOpacity(0.45),
+              ),
         ),
       ],
     );
@@ -316,17 +268,13 @@ class StepDot extends StatelessWidget {
 }
 
 class StepLine extends StatelessWidget {
-
   const StepLine({super.key});
 
   @override
-  Widget build(BuildContext context) {
-
-    return Container(
-      width: 40, // largeur de la ligne
-      height: 1,
-      margin: const EdgeInsets.only(bottom: 16),
-      color: AppColors.secondary.withOpacity(0.25),
-    );
-  }
+  Widget build(BuildContext context) => Container(
+        width: 40,
+        height: 1,
+        margin: const EdgeInsets.only(bottom: 16),
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.25),
+      );
 }
