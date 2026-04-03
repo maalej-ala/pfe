@@ -2,10 +2,11 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
+import 'package:pfe_flutter/features/TextRecognition/models/text_recognition_model.dart';
 import 'package:pfe_flutter/shared/services/face_detection_service.dart';
 
 class TextRecognitionViewModel extends ChangeNotifier {
-  
+  TextRecognitionModel? extractedModel;
   /// MLKit
 final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
   /// Image Picker
@@ -47,29 +48,40 @@ File? extractedFace;
 
   /// SERVICE : Text Recognition
   Future<void> _recognizeTextAndFace() async {
+  if (selectedImage == null) return;
 
-    if (selectedImage == null) return;
-    isProcessing = true;
-    notifyListeners();
+  isProcessing = true;
+  notifyListeners();
 
-    try {
+  try {
+    final inputImage = InputImage.fromFile(selectedImage!);
 
-      final inputImage = InputImage.fromFile(selectedImage!);
+    final RecognizedText recognizedText =
+        await _textRecognizer.processImage(inputImage);
 
-      final RecognizedText recognizedText =
-          await _textRecognizer.processImage(inputImage);
+    result = recognizedText;
 
- result = recognizedText;
- extractedFace =
+    // 🔥 Face extraction
+    extractedFace =
         await _faceService.extractFaceFromFile(selectedImage!);
 
-    } catch (e) {
-      debugPrint("Error recognizing text: $e");
-    } finally {
+    // 🔥 EXTRACTION DATA
+    final extractedMap = extractID(extractedIdCardLines);
 
+    // 🔥 MODEL COMPLET
+    extractedModel = TextRecognitionModel.fromMap(
+      extractedMap,
+      cinImage: selectedImage,   // ✅ image CIN
+      faceImage: extractedFace,  // ✅ visage
+    );
+
+  } catch (e) {
+    debugPrint("Error recognizing text: $e");
+  } finally {
     isProcessing = false;
     notifyListeners();
-  }}
+  }
+}
 
   /// Lignes triées de haut en bas (lecture naturelle de la carte)
 List<String> get extractedIdCardLines {
@@ -220,11 +232,15 @@ Map<String, String?> extractID(List<String> lines) {
     }
 
     // ── Fait le (date établissement) ────────────────────────
-    if (RegExp(r'^Fait\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
-      final m = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
-      if (m != null) data["date_etablissement"] = m.group(0);
+if (data["date_etablissement"] == null) {
+  if (RegExp(r'(fait|d[ée]livr[ée]|emis)', caseSensitive: false).hasMatch(line)) {
+    final m = RegExp(r'\d{2}[-/]\d{2}[-/]\d{4}').firstMatch(line);
+    if (m != null) {
+      data["date_etablissement"] = m.group(0);
       continue;
     }
+  }
+}
 
     // ── Expire le ───────────────────────────────────────────
     if (RegExp(r'^Expire\s*le\s*:?', caseSensitive: false).hasMatch(line)) {

@@ -1,4 +1,5 @@
 // situation_personnelle_page.dart
+import 'package:dropdown_search/dropdown_search.dart';
 import 'package:flutter/material.dart';
 import 'package:pfe_flutter/features/situation_professionnelle/views/situation_professionnelle_page.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
@@ -7,8 +8,11 @@ import 'package:pfe_flutter/shared/widgets/primary_button.dart';
 import '../view_models/situation_personnelle_view_model.dart';
 
 class SituationPersonnellePage extends StatefulWidget {
-  const SituationPersonnellePage({super.key});
-
+    final String currency; // ✅ AJOUT
+  const SituationPersonnellePage({
+    super.key,
+    this.currency = 'USD', // défaut
+  });
   @override
   State<SituationPersonnellePage> createState() =>
       _SituationPersonnellePageState();
@@ -18,9 +22,37 @@ class _SituationPersonnellePageState
     extends State<SituationPersonnellePage> {
   late final SituationPersonnelleViewModel _viewModel;
 
-  final List<String> _nationalites = [
-    'Tunisienne', 'Française', 'Algérienne', 'Marocaine', 'Libyenne', 'Autre',
-  ];
+  final List<String> _nationalites =[
+  'Afghane','Albanaise','Algérienne','Allemande','Américaine','Andorrane',
+  'Angolaise','Antiguaise','Argentine','Arménienne','Australienne','Autrichienne','Azerbaïdjanaise',
+  'Bahamienne','Bahreïnienne','Bangladaise','Barbadienne','Biélorusse','Belge','Bélizienne','Béninoise','Bhoutanaise',
+  'Birmane','Bolivienne','Bosnienne','Botswanaise','Brésilienne','Brunéienne','Bulgare','Burkinabée','Burundaise',
+  'Cambodgienne','Camerounaise','Canadienne','Cap-Verdienne','Centrafricaine','Chilienne','Chinoise','Chypriote','Colombienne',
+  'Comorienne','Congolaise (Congo)','Congolaise (RDC)','Costaricaine','Croate','Cubaine',
+  'Danoise','Djiboutienne','Dominicaine','Dominiquaise',
+  'Égyptienne','Émiratie','Équatorienne','Érythréenne','Espagnole','Estonienne','Éthiopienne',
+  'Fidjienne','Finlandaise','Française',
+  'Gabonaise','Gambienne','Géorgienne','Ghanéenne','Grecque','Grenadienne','Guatémaltèque','Guinéenne','Guyanienne',
+  'Haïtienne','Hondurienne','Hongroise',
+  'Indienne','Indonésienne','Irakienne','Iranienne','Irlandaise','Islandaise','Israélienne','Italienne',
+  'Jamaïcaine','Japonaise','Jordanienne',
+  'Kazakhe','Kényane','Kirghize','Kiribatienne','Koweïtienne','Kosovare',
+  'Laotienne','Lesothane','Lettone','Libanaise','Libérienne','Libyenne','Liechtensteinoise','Lituanienne','Luxembourgeoise',
+  'Macédonienne','Malgache','Malaisienne','Malawienne','Maldivienne','Malienne','Maltaise','Marocaine','Marshallaise','Mauritanienne','Mauricienne','Mexicaine','Micronésienne','Moldave','Monégasque','Mongole','Monténégrine','Mozambicaine',
+  'Namibienne','Nauruane','Népalaise','Nicaraguayenne','Nigériane','Nigérienne','Nord-Coréenne','Norvégienne','Néo-Zélandaise',
+  'Omanaise','Ougandaise','Ouzbèke',
+  'Pakistanaise','Palaosienne','Palestinienne','Panaméenne','Papouasienne','Paraguayenne','Péruvienne','Philippine','Polonaise','Portugaise',
+  'Qatarienne',
+  'Roumaine','Rwandaise','Russe',
+  'Saint-Kittsienne','Saint-Lucienne','Saint-Marinaise','Saint-Vincentaise','Salvadorienne','Samoane','Santoméenne','Saoudienne',
+  'Sénégalaise','Serbe','Seychelloise','Sierra-Léonaise','Singapourienne','Slovaque','Slovène','Somalienne','Soudanaise',
+  'Sri-Lankaise','Sud-Africaine','Sud-Coréenne','Sud-Soudanaise','Suédoise','Suisse','Surinamaise','Syrienne',
+  'Tadjike','Taïwanaise','Tanzanienne','Tchadienne','Tchèque','Thaïlandaise','Timoraise','Togolaise','Tongienne','Trinidadienne','Tunisienne','Turkmène','Turque','Tuvaluane',
+  'Ukrainienne','Uruguayenne',
+  'Vanuataise','Vaticane','Vénézuélienne','Vietnamienne',
+  'Yéménite',
+  'Zambienne','Zimbabwéenne'
+];
 
   final List<String> _statutsCivils = [
     'Célibataire', 'Marié(e)', 'Divorcé(e)', 'Veuf / Veuve',
@@ -44,7 +76,7 @@ class _SituationPersonnellePageState
     super.dispose();
   }
 
-  void _onContinuer() {
+  Future<void> _onContinuer() async {
     if (!_viewModel.state.isValid) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
@@ -55,10 +87,14 @@ class _SituationPersonnellePageState
       );
       return;
     }
+       // await _viewModel.submitSituationPersonnelle(); // ✅ envoi backend
+
     Navigator.push(
       context,
       MaterialPageRoute(
-          builder: (_) => const SituationProfessionnellePage()),
+          builder: (_) => SituationProfessionnellePage(
+            currency: widget.currency,
+          )),
     );
   }
 
@@ -92,11 +128,9 @@ class _SituationPersonnellePageState
                           children: [
                             const _Label('Nationalité'),
                             const SizedBox(height: 8),
-                            _DropdownField(
-                              value: state.nationalite,
-                              items: _nationalites,
-                              hint: 'Sélectionner la nationalité',
-                              icon: Icons.public_outlined,
+                            _NationaliteDropdown(
+                              nationalites: _nationalites,
+                              selected: state.nationalite,
                               onChanged: _viewModel.updateNationalite,
                             ),
                             const SizedBox(height: 24),
@@ -217,53 +251,97 @@ class _Label extends StatelessWidget {
 }
 
 // ── Dropdown ─────────────────────────────────────────────────
-class _DropdownField extends StatelessWidget {
-  final String? value;
-  final List<String> items;
-  final String hint;
-  final IconData icon;
+class _NationaliteDropdown extends StatelessWidget {
+  final List<String> nationalites;
+  final String? selected;
   final ValueChanged<String?> onChanged;
 
-  const _DropdownField({
-    required this.value,
-    required this.items,
-    required this.hint,
-    required this.icon,
+  const _NationaliteDropdown({
+    required this.nationalites,
+    required this.selected,
     required this.onChanged,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final inputTheme = theme.inputDecorationTheme;
     final iconColor = theme.iconTheme.color;
-    return Container(
-      decoration: BoxDecoration(
-        color: const Color(0xFFF9F8F5),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFE5E0D5)),
-      ),
-      child: DropdownButtonFormField<String>(
-        value: value,
+
+    return DropdownSearch<String>(
+      selectedItem: selected,
+
+      items: (filter, _) => nationalites
+          .where((n) => n.toLowerCase().contains(filter.toLowerCase()))
+          .toList(),
+
+      compareFn: (a, b) => a == b,
+
+      // ✅ utilise le theme global
+      decoratorProps: DropDownDecoratorProps(
         decoration: InputDecoration(
-          prefixIcon: Icon(icon, size: 19, color: iconColor),
-          border: InputBorder.none,
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 0, vertical: 4),
+          hintText: 'Sélectionner la nationalité',
+          prefixIcon: Icon(Icons.public_outlined, size: 19, color: iconColor),
+
+          // 🔥 IMPORTANT : utiliser le theme
+          filled: inputTheme.filled,
+          fillColor: inputTheme.fillColor,
+          contentPadding: inputTheme.contentPadding,
+          hintStyle: inputTheme.hintStyle,
+          border: inputTheme.border,
+          enabledBorder: inputTheme.enabledBorder,
+          focusedBorder: inputTheme.focusedBorder,
         ),
-        hint: Text(hint, style: theme.inputDecorationTheme.hintStyle),
-        style: theme.textTheme.bodyMedium,
-        dropdownColor: theme.colorScheme.surface,
-        icon: Icon(Icons.keyboard_arrow_down_rounded, color: iconColor),
-        onChanged: onChanged,
-        items: items
-            .map((item) =>
-                DropdownMenuItem(value: item, child: Text(item)))
-            .toList(),
       ),
+
+      popupProps: PopupProps.menu(
+        showSearchBox: true,
+
+        // ✅ champ de recherche avec theme
+        searchFieldProps: TextFieldProps(
+          decoration: InputDecoration(
+            hintText: 'Rechercher une nationalité...',
+            prefixIcon: Icon(Icons.search, size: 19, color: iconColor),
+
+            filled: inputTheme.filled,
+            fillColor: inputTheme.fillColor,
+            hintStyle: inputTheme.hintStyle,
+            border: inputTheme.border,
+            enabledBorder: inputTheme.enabledBorder,
+            focusedBorder: inputTheme.focusedBorder,
+            contentPadding: inputTheme.contentPadding,
+          ),
+        ),
+
+        menuProps: MenuProps(
+          borderRadius: BorderRadius.circular(14),
+          elevation: 4,
+        ),
+
+        constraints: const BoxConstraints(maxHeight: 300),
+
+        containerBuilder: (ctx, child) => ClipRRect(
+          borderRadius: BorderRadius.circular(14),
+          child: Material(
+            color: theme.colorScheme.surface, // ✅ important pour dark mode
+            child: child,
+          ),
+        ),
+      ),
+
+      dropdownBuilder: (context, selectedItem) {
+        return Text(
+          selectedItem ?? '',
+          style: theme.textTheme.bodyMedium,
+        );
+      },
+
+      itemAsString: (item) => item,
+
+      onChanged: onChanged,
     );
   }
 }
-
 // ── Select chip (statut civil) ────────────────────────────────
 class _SelectChip extends StatelessWidget {
   final String label;

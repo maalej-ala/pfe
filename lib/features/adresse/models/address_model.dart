@@ -1,33 +1,44 @@
 class AdresseState {
   final String adresse;
-  final String? pays;
+  final String? paysIso;
+  final String? paysNom;
   final String? gouvernorat;
   final String codePostal;
+  final String currency; // ✅ AJOUT
 
   const AdresseState({
     this.adresse = '',
-    this.pays = 'Tunisie',
+    this.paysIso,
+    this.paysNom,
     this.gouvernorat,
     this.codePostal = '',
+    this.currency = 'USD', // ✅ VALEUR PAR DÉFAUT
   });
+
+  bool get isValid =>true;
+      //adresse.isNotEmpty &&
+     // paysIso != null &&
+      //gouvernorat != null &&
+      //codePostal.isNotEmpty;
 
   AdresseState copyWith({
     String? adresse,
-    String? pays,
+    String? paysIso,
+    String? paysNom,
     String? gouvernorat,
     String? codePostal,
-  }) {
-    return AdresseState(
-      adresse: adresse ?? this.adresse,
-      pays: pays ?? this.pays,
-      gouvernorat: gouvernorat ?? this.gouvernorat,
-      codePostal: codePostal ?? this.codePostal,
-    );
-  }
+    // Flag to explicitly null-out gouvernorat on country change
+    bool clearGouvernorat = false,
+        String? currency, // ✅ AJOUT
 
-  bool get isValid =>true;
-      // adresse.isNotEmpty &&
-      // pays != null &&
-      // gouvernorat != null &&
-      // codePostal.isNotEmpty;
+  }) =>
+      AdresseState(
+        adresse:      adresse      ?? this.adresse,
+        paysIso:      paysIso      ?? this.paysIso,
+        paysNom:      paysNom      ?? this.paysNom,
+        gouvernorat:  clearGouvernorat ? null : (gouvernorat ?? this.gouvernorat),
+        codePostal:   codePostal   ?? this.codePostal,
+              currency: currency ?? this.currency, // ✅ AJOUT
+
+      );
 }

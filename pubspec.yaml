@@ -44,6 +44,7 @@ dependencies:
   http: ^1.6.0
   intl_phone_field: ^3.2.0
   country_state_city: ^0.1.6
+  dropdown_search: ^6.0.2
   
 dev_dependencies:
   flutter_test:

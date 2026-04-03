@@ -8,7 +8,12 @@ import 'package:pfe_flutter/shared/widgets/primary_button.dart';
 import '../view_models/situation_professionnelle_view_model.dart';
 
 class SituationProfessionnellePage extends StatefulWidget {
-  const SituationProfessionnellePage({super.key});
+    final String currency; // ✅ AJOUT
+
+  const SituationProfessionnellePage({
+    super.key,
+    this.currency = 'USD',
+  });
 
   @override
   State<SituationProfessionnellePage> createState() =>
@@ -63,21 +68,30 @@ class _SituationProfessionnellePageState
     super.dispose();
   }
 
-  void _onContinuer() {
-    if (!_viewModel.state.isValid) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content:
-              Text('Veuillez remplir tous les champs obligatoires.'),
-          backgroundColor: Colors.redAccent,
-        ),
-      );
-      return;
-    }
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const ChoixBancairePage()));
+Future<void> _onContinuer() async {
+  if (!_viewModel.state.isValid) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Veuillez remplir tous les champs obligatoires.'),
+        backgroundColor: Colors.redAccent,
+      ),
+    );
+    return;
   }
 
+  try {
+   // await _viewModel.submitSituationProfessionnelle();
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ChoixBancairePage()),
+    );
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Erreur : $e')),
+    );
+  }
+}
   @override
   Widget build(BuildContext context) {
     final state = _viewModel.state;
@@ -118,7 +132,7 @@ class _SituationProfessionnellePageState
                             ),
                             const SizedBox(height: 20),
 
-                            const _Label('Revenu net mensuel (TND)'),
+                            _Label('Revenu net mensuel (${widget.currency})'),
                             const SizedBox(height: 8),
                             _Input(
                               controller: _revenuController,

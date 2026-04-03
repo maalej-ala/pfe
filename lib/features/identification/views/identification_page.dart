@@ -190,12 +190,21 @@ IntlPhoneField(
     focusedBorder: Theme.of(context).inputDecorationTheme.focusedBorder,
     hintStyle: Theme.of(context).inputDecorationTheme.hintStyle,
   ),
-  onChanged: (phone) {
+  onChanged: (phone) {  
     _viewModel.updatePhone(
       phone.completeNumber,
-      phone.countryCode,
+  phone.countryISOCode, // ✅ CORRECT
       phone.number,
     );
+  },
+
+   onCountryChanged: (country) {
+    _viewModel.updatePhone(
+      _viewModel.state.fullPhone,
+      country.code, // ✅ ISO CORRECT (TN, FR...)
+      _viewModel.state.phoneNumber,
+    );
+
   },
 ),
 
@@ -243,11 +252,14 @@ IntlPhoneField(
     ? () async {
         try {
          // await _viewModel.submitIdentification(); // ✅ ENVOI BACKEND
+  print("ISO envoyé: ${_viewModel.state.countryCode}");
 
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (_) => const AdressePage(),
+              builder: (_) => AdressePage(
+                      initialCountryIso: _viewModel.state.countryCode,
+              ),
             ),
           );
         } catch (e) {
