@@ -1,45 +1,90 @@
-// view_models/mot_de_passe_view_model.dart
+// features/motDePasse/view_models/mot_de_passe_view_model.dart
 
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
+import 'package:http/http.dart' as http;
+import 'package:pfe_flutter/shared/services/device_service.dart';
 import '../models/mot_de_passe_state.dart';
 
 class MotDePasseViewModel extends ChangeNotifier {
   MotDePasseState _state = const MotDePasseState();
-
   MotDePasseState get state => _state;
 
-  // ── Mise à jour du mot de passe ────────────────────────────
+  static const String _baseUrl =
+      'http://10.20.30.18:8080/api/mot-de-passe';
+
+  // ── Mise à jour mot de passe ──────────────────────────────
   void updateMotDePasse(String value) {
     _state = _state.copyWith(motDePasse: value);
     notifyListeners();
   }
 
-  // ── Mise à jour de la confirmation ─────────────────────────
+  // ── Mise à jour confirmation ──────────────────────────────
   void updateConfirmation(String value) {
     _state = _state.copyWith(confirmation: value);
     notifyListeners();
   }
 
-  // ── Toggle visibilité mot de passe ─────────────────────────
+  // ── Toggle visibilité mot de passe ────────────────────────
   void toggleMotDePasseVisible() {
-    _state = _state.copyWith(
-      motDePasseVisible: !_state.motDePasseVisible,
-    );
+    _state = _state.copyWith(motDePasseVisible: !_state.motDePasseVisible);
     notifyListeners();
   }
 
-  // ── Toggle visibilité confirmation ─────────────────────────
+  // ── Toggle visibilité confirmation ────────────────────────
   void toggleConfirmationVisible() {
-    _state = _state.copyWith(
-      confirmationVisible: !_state.confirmationVisible,
-    );
+    _state =
+        _state.copyWith(confirmationVisible: !_state.confirmationVisible);
     notifyListeners();
   }
 
-  // ── Soumission (service ou navigation) ────────────────────
-  Future<bool> soumettre() async {
-    if (!_state.isValid) return false;
-    // TODO: appel service (ex: AuthService.setPassword(_state.motDePasse))
-    return true;
+  // ── Soumission + appel backend ────────────────────────────
+  //
+  // Retourne (true, null)       → succès
+  // Retourne (false, null)      → validation locale échouée
+  // Retourne (false, "message") → erreur réseau / serveur
+  //
+  Future<(bool success, String? errorMessage)> soumettre() async {
+                final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
+  
+    // 1. Validation locale
+    if (!_state.isValid) return (false, null);
+
+    try {
+      final uri = Uri.parse(_baseUrl);
+
+      final response = await http
+          .post(
+            uri,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'motDePasse': _state.motDePasse,
+              'deviceId': deviceId
+            }),
+          )
+          .timeout(
+            const Duration(seconds: 30),
+            onTimeout: () =>
+                throw Exception('Délai dépassé. Vérifiez votre connexion.'),
+          );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        debugPrint('✅ MotDePasse enregistré');
+        return (true, null);
+      }
+
+      // Essaie de lire le message d'erreur Spring
+      String serverMsg = 'Erreur ${response.statusCode}';
+      try {
+        final body = jsonDecode(response.body);
+        serverMsg = body['message'] ?? body['error'] ?? serverMsg;
+      } catch (_) {}
+
+      debugPrint('❌ Erreur serveur: $serverMsg');
+      return (false, serverMsg);
+    } catch (e) {
+      debugPrint('🔥 Exception: $e');
+      return (false, e.toString());
+    }
   }
 }

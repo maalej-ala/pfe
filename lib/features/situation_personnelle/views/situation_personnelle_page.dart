@@ -87,7 +87,7 @@ class _SituationPersonnellePageState
       );
       return;
     }
-       // await _viewModel.submitSituationPersonnelle(); // ✅ envoi backend
+        await _viewModel.submitSituationPersonnelle(); // ✅ envoi backend
 
     Navigator.push(
       context,

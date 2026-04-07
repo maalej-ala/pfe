@@ -1,4 +1,6 @@
 // verification_identite_page.dart
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
@@ -17,11 +19,15 @@ class VerificationIdentitePage extends StatefulWidget {
       _VerificationIdentitePageState();
 }
 
-class _VerificationIdentitePageState
-    extends State<VerificationIdentitePage> {
+class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   late final VerificationIdentiteViewModel _viewModel;
   final _cinController = TextEditingController();
   final _dateDelivranceController = TextEditingController();
+
+  // ── Images reçues via Navigator.pop des sous-pages ────────────────
+  File? _photoCin;        // cinImage  ← TextRecognitionPage
+  File? _photoVisageCin;  // faceImage ← TextRecognitionPage
+  File? _photoVisageLive; // File      ← Take3PhotoPage
 
   @override
   void initState() {
@@ -43,6 +49,7 @@ class _VerificationIdentitePageState
     super.dispose();
   }
 
+  // ── Date picker ───────────────────────────────────────────────────
   Future<void> _selectDate() async {
     final colorScheme = Theme.of(context).colorScheme;
     final DateTime? picked = await showDatePicker(
@@ -69,30 +76,87 @@ class _VerificationIdentitePageState
     }
   }
 
-  void _onSoumettre() {
-    if (!_viewModel.state.isValid) {
-      String msg =
-          'Veuillez compléter toutes les étapes de vérification.';
-      final s = _viewModel.state;
+  // ── Ouvre TextRecognitionPage et récupère les images via pop ──────
+  // TextRecognitionPage retourne : {'cinImage': File, 'faceImage': File}
+  Future<void> _ouvrirScanCin() async {
+    final result = await Navigator.push<Map<String, dynamic>>(
+      context,
+      MaterialPageRoute(builder: (_) => const TextRecognitionPage()),
+    );
+
+    if (result != null) {
+      setState(() {
+        if (result['cinImage'] is File) _photoCin = result['cinImage'];
+        if (result['faceImage'] is File) _photoVisageCin = result['faceImage'];
+      });
+      _viewModel.updateHasCinRecto(true);
+    }
+  }
+
+  // ── Ouvre Take3PhotoPage et récupère la photo live via pop ────────
+  // Take3PhotoPage retourne : File (frontFaceExtracted)
+  Future<void> _ouvrirVerificationLive() async {
+    final result = await Navigator.push<File>(
+      context,
+      MaterialPageRoute(builder: (_) => const Take3PhotoPage()),
+    );
+
+    if (result != null) {
+      setState(() => _photoVisageLive = result);
+      _viewModel.updateVerificationsPhotosCompleted(true);
+    }
+  }
+
+  // ── Soumission finale ─────────────────────────────────────────────
+  Future<void> _onSoumettre() async {
+    final s = _viewModel.state;
+    if (!s.isValid) {
+      String msg = 'Veuillez compléter toutes les étapes de vérification.';
       if (s.cin.length != 8)
         msg = 'Le numéro CIN doit contenir 8 chiffres.';
       else if (s.dateDelivrance.isEmpty)
         msg = 'Veuillez saisir la date de délivrance.';
-      else if (!s.hasCinRecto || !s.hasCinVerso)
-        msg = 'Veuillez télécharger les deux faces de votre CIN.';
+      else if (!s.hasCinRecto)
+        msg = 'Veuillez scanner votre CIN.';
       else if (!s.verificationsPhotosCompleted)
         msg = 'Veuillez compléter la vérification vidéo.';
       else if (!s.confirmeSansAmericanite)
         msg = 'Veuillez confirmer la déclaration FATCA.';
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(msg), backgroundColor: Colors.redAccent),
+        SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
       );
       return;
     }
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const MotDePassePage()));
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final success = await _viewModel.submitVerification(
+      photoCin: _photoCin,
+      photoVisageCin: _photoVisageCin,
+      photoVisageLive: _photoVisageLive,
+    );
+
+    if (mounted) Navigator.of(context, rootNavigator: true).pop();
+    if (!mounted) return;
+
+    if (success) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const MotDePassePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Erreur lors de l\'envoi. Vérifiez votre connexion.'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
   }
 
   @override
@@ -118,7 +182,8 @@ class _VerificationIdentitePageState
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      // ── CIN Info ──────────────────────────────────
+
+                      // ── 1. Informations CIN ───────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -151,8 +216,7 @@ class _VerificationIdentitePageState
                                   controller: _dateDelivranceController,
                                   hint: 'JJ/MM/AAAA',
                                   icon: Icons.event_outlined,
-                                  suffixIcon:
-                                      Icons.calendar_today_outlined,
+                                  suffixIcon: Icons.calendar_today_outlined,
                                 ),
                               ),
                             ),
@@ -162,7 +226,7 @@ class _VerificationIdentitePageState
 
                       const SizedBox(height: 16),
 
-                      // ── Photos CIN ────────────────────────────────
+                      // ── 2. Photos CIN Recto + Verso ───────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -174,39 +238,28 @@ class _VerificationIdentitePageState
                             const SizedBox(height: 16),
                             Row(
                               children: [
+                                // Recto → ouvre TextRecognitionPage
                                 Expanded(
-                                  child: _PhotoUploadBox(
+                                  child: _StatusBox(
                                     label: 'CIN Recto',
                                     icon: Icons.flip_to_front_rounded,
-                                    hasImage: state.hasCinRecto,
-                                    onTap: () async {
-                                      final result =
-                                          await Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) =>
-                                              const TextRecognitionPage(),
-                                        ),
-                                      );
-                                      if (result != null &&
-                                          result is String &&
-                                          result.isNotEmpty) {
-                                        _cinController.text = result;
-                                        _viewModel.updateCin(result);
-                                        _viewModel
-                                            .updateHasCinRecto(true);
-                                      }
-                                    },
+                                    isDone: state.hasCinRecto,
+                                    doneLabel: 'Scanné',
+                                    pendingLabel: 'Scanner',
+                                    onTap: _ouvrirScanCin,
                                   ),
                                 ),
                                 const SizedBox(width: 12),
+                                // Verso → confirmation manuelle
                                 Expanded(
-                                  child: _PhotoUploadBox(
+                                  child: _StatusBox(
                                     label: 'CIN Verso',
                                     icon: Icons.flip_to_back_rounded,
-                                    hasImage: state.hasCinVerso,
-                                    onTap: () => _viewModel
-                                        .updateHasCinVerso(true),
+                                    isDone: state.hasCinVerso,
+                                    doneLabel: 'Confirmé',
+                                    pendingLabel: 'Confirmer',
+                                    onTap: () =>
+                                        _viewModel.updateHasCinVerso(true),
                                   ),
                                 ),
                               ],
@@ -217,7 +270,7 @@ class _VerificationIdentitePageState
 
                       const SizedBox(height: 16),
 
-                      // ── Live verification ─────────────────────────
+                      // ── 3. Vérification en direct ─────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -227,116 +280,9 @@ class _VerificationIdentitePageState
                               title: 'Vérification en direct',
                             ),
                             const SizedBox(height: 16),
-                            AnimatedContainer(
-                              duration: const Duration(milliseconds: 200),
-                              width: double.infinity,
-                              padding: const EdgeInsets.all(18),
-                              decoration: BoxDecoration(
-                                color: state.verificationsPhotosCompleted
-                                    ? colorScheme.secondary
-                                        .withOpacity(0.07)
-                                    : colorScheme.primary
-                                        .withOpacity(0.05),
-                                borderRadius: BorderRadius.circular(14),
-                                border: Border.all(
-                                  color: state
-                                          .verificationsPhotosCompleted
-                                      ? colorScheme.secondary
-                                          .withOpacity(0.4)
-                                      : colorScheme.primary
-                                          .withOpacity(0.15),
-                                ),
-                              ),
-                              child: Column(
-                                children: [
-                                  Container(
-                                    width: 56,
-                                    height: 56,
-                                    decoration: BoxDecoration(
-                                      color: state
-                                              .verificationsPhotosCompleted
-                                          ? colorScheme.secondary
-                                          : colorScheme.primary,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: colorScheme.primary
-                                              .withOpacity(0.25),
-                                          blurRadius: 12,
-                                        ),
-                                      ],
-                                    ),
-                                    child: Icon(
-                                      state.verificationsPhotosCompleted
-                                          ? Icons.check_rounded
-                                          : Icons.videocam_rounded,
-                                      color: state
-                                              .verificationsPhotosCompleted
-                                          ? Colors.white
-                                          : colorScheme.secondary,
-                                      size: 28,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 12),
-                                  Text(
-                                    state.verificationsPhotosCompleted
-                                        ? 'Vérification complétée !'
-                                        : 'Vidéo de vérification en direct',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .titleMedium,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Text(
-                                    'Nous allons vous demander de prendre 3 photos face caméra pour confirmer votre identité',
-                                    textAlign: TextAlign.center,
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: colorScheme.primary,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 14),
-                                  if (!state
-                                      .verificationsPhotosCompleted)
-                                    SizedBox(
-                                      width: double.infinity,
-                                      child: OutlinedButton.icon(
-                                        onPressed: () async {
-                                          await Navigator.push(
-                                            context,
-                                            MaterialPageRoute(
-                                              builder: (_) =>
-                                                  const Take3PhotoPage(),
-                                            ),
-                                          );
-                                          _viewModel
-                                              .updateVerificationsPhotosCompleted(
-                                                  true);
-                                        },
-                                        icon: const Icon(
-                                            Icons.camera_alt_outlined,
-                                            size: 18),
-                                        label: const Text(
-                                            'Lancer la vérification'),
-                                        // Tighten border to primary navy
-                                        style: OutlinedButton.styleFrom(
-                                          side: BorderSide(
-                                              color: colorScheme.primary,
-                                              width: 1.5),
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                      12)),
-                                          padding:
-                                              const EdgeInsets.symmetric(
-                                                  vertical: 12),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
+                            _LiveVerificationBox(
+                              isDone: state.verificationsPhotosCompleted,
+                              onTap: _ouvrirVerificationLive,
                             ),
                           ],
                         ),
@@ -344,7 +290,7 @@ class _VerificationIdentitePageState
 
                       const SizedBox(height: 16),
 
-                      // ── Declarations ──────────────────────────────
+                      // ── 4. Déclarations ───────────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -356,8 +302,8 @@ class _VerificationIdentitePageState
                             const SizedBox(height: 16),
                             _DeclarationBox(
                               value: state.confirmeSansAmericanite,
-                              onChanged: _viewModel
-                                  .updateConfirmeSansAmericanite,
+                              onChanged:
+                                  _viewModel.updateConfirmeSansAmericanite,
                               icon: Icons.gavel_rounded,
                               text:
                                   "Je confirme que je n'ai aucun indice d'américanité (non-soumis à FATCA)",
@@ -366,11 +312,9 @@ class _VerificationIdentitePageState
                             const SizedBox(height: 12),
                             _DeclarationBox(
                               value: state.estClientAutreBanque,
-                              onChanged:
-                                  _viewModel.updateEstClientAutreBanque,
+                              onChanged: _viewModel.updateEstClientAutreBanque,
                               icon: Icons.account_balance_rounded,
-                              text:
-                                  "Je suis client(e) dans une autre banque",
+                              text: "Je suis client(e) dans une autre banque",
                               color: const Color(0xFF2E7D32),
                             ),
                           ],
@@ -397,7 +341,10 @@ class _VerificationIdentitePageState
   }
 }
 
-// ── Shared card ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════
+// WIDGETS
+// ════════════════════════════════════════════════════════════════════
+
 class _FormCard extends StatelessWidget {
   final Widget child;
   const _FormCard({required this.child});
@@ -423,7 +370,6 @@ class _FormCard extends StatelessWidget {
   }
 }
 
-// ── Section title with icon badge ────────────────────────────
 class _SectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -450,7 +396,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ── Field label ──────────────────────────────────────────────
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
@@ -460,7 +405,6 @@ class _Label extends StatelessWidget {
       Text(text, style: Theme.of(context).textTheme.labelMedium);
 }
 
-// ── Text input ───────────────────────────────────────────────
 class _Input extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -501,70 +445,78 @@ class _Input extends StatelessWidget {
   }
 }
 
-// ── Photo upload box ─────────────────────────────────────────
-class _PhotoUploadBox extends StatelessWidget {
+// ── Box CIN Recto / Verso : icône uniquement, pas de preview photo ──
+class _StatusBox extends StatelessWidget {
   final String label;
   final IconData icon;
-  final bool hasImage;
+  final bool isDone;
+  final String doneLabel;
+  final String pendingLabel;
   final VoidCallback onTap;
 
-  const _PhotoUploadBox({
+  const _StatusBox({
     required this.label,
     required this.icon,
-    required this.hasImage,
+    required this.isDone,
+    required this.doneLabel,
+    required this.pendingLabel,
     required this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final iconColor = Theme.of(context).iconTheme.color;
+    final doneColor = colorScheme.secondary;
 
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 250),
         height: 100,
         decoration: BoxDecoration(
-          color: hasImage
-              ? colorScheme.primary.withOpacity(0.05)
+          color: isDone
+              ? doneColor.withOpacity(0.07)
               : Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: hasImage
-                ? colorScheme.secondary
-                : const Color(0xFFDDD8CC),
-            width: hasImage ? 1.5 : 1,
+            color: isDone ? doneColor : const Color(0xFFDDD8CC),
+            width: isDone ? 1.8 : 1.0,
           ),
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              hasImage ? Icons.check_circle_outline : icon,
-              color: hasImage ? colorScheme.secondary : iconColor,
-              size: 28,
+            AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: isDone
+                  ? Icon(Icons.check_circle_rounded,
+                      key: const ValueKey('done'),
+                      color: doneColor,
+                      size: 32)
+                  : Icon(icon,
+                      key: const ValueKey('idle'),
+                      color: Theme.of(context).iconTheme.color,
+                      size: 28),
             ),
             const SizedBox(height: 8),
             Text(
               label,
               style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: hasImage
+                    color: isDone
                         ? colorScheme.primary
                         : const Color(0xFF888888),
-                    fontWeight: hasImage
-                        ? FontWeight.bold
-                        : FontWeight.normal,
+                    fontWeight:
+                        isDone ? FontWeight.bold : FontWeight.normal,
                   ),
             ),
-            if (!hasImage)
-              Text(
-                'Appuyer pour télécharger',
-                style: Theme.of(context)
-                    .textTheme
-                    .labelSmall
-                    ?.copyWith(fontSize: 10),
-              ),
+            const SizedBox(height: 2),
+            Text(
+              isDone ? doneLabel : pendingLabel,
+              style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                    fontSize: 10,
+                    color: isDone ? doneColor : const Color(0xFFAAAAAA),
+                  ),
+            ),
           ],
         ),
       ),
@@ -572,9 +524,123 @@ class _PhotoUploadBox extends StatelessWidget {
   }
 }
 
-// ── Declaration checkbox box ─────────────────────────────────
-// Note: uses a custom per-item color (blue/green), NOT the global
-// checkboxTheme, because each declaration has its own accent color.
+// ── Box vérification live : icône uniquement après complétion ────────
+class _LiveVerificationBox extends StatelessWidget {
+  final bool isDone;
+  final VoidCallback onTap;
+
+  const _LiveVerificationBox({required this.isDone, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final doneColor = colorScheme.secondary;
+
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 250),
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: isDone
+            ? doneColor.withOpacity(0.07)
+            : colorScheme.primary.withOpacity(0.05),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: isDone
+              ? doneColor.withOpacity(0.5)
+              : colorScheme.primary.withOpacity(0.15),
+          width: isDone ? 1.8 : 1.0,
+        ),
+      ),
+      child: Column(
+        children: [
+          // Icône centrale animée
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 300),
+            child: isDone
+                ? Container(
+                    key: const ValueKey('done'),
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: doneColor,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                            color: doneColor.withOpacity(0.3),
+                            blurRadius: 12)
+                      ],
+                    ),
+                    child: const Icon(Icons.check_rounded,
+                        color: Colors.white, size: 28),
+                  )
+                : Container(
+                    key: const ValueKey('idle'),
+                    width: 56,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      color: colorScheme.primary,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                            color: colorScheme.primary.withOpacity(0.25),
+                            blurRadius: 12)
+                      ],
+                    ),
+                    child: Icon(Icons.videocam_rounded,
+                        color: colorScheme.secondary, size: 28),
+                  ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isDone
+                ? 'Vérification complétée !'
+                : 'Vidéo de vérification en direct',
+            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                  color: isDone ? doneColor : null,
+                  fontWeight: isDone ? FontWeight.bold : null,
+                ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            isDone
+                ? 'Vos 3 photos ont été capturées avec succès'
+                : 'Nous allons vous demander de prendre 3 photos face caméra pour confirmer votre identité',
+            textAlign: TextAlign.center,
+            style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                  color: isDone
+                      ? doneColor.withOpacity(0.8)
+                      : colorScheme.primary,
+                ),
+          ),
+          const SizedBox(height: 14),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: onTap,
+              icon: Icon(
+                isDone ? Icons.refresh_rounded : Icons.camera_alt_outlined,
+                size: 18,
+              ),
+              label:
+                  Text(isDone ? 'Recommencer' : 'Lancer la vérification'),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                    color: isDone ? doneColor : colorScheme.primary,
+                    width: 1.5),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Déclaration checkbox ──────────────────────────────────────────
 class _DeclarationBox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?> onChanged;
@@ -600,8 +666,7 @@ class _DeclarationBox extends StatelessWidget {
               : Theme.of(context).scaffoldBackgroundColor,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color:
-                value ? color.withOpacity(0.4) : const Color(0xFFDDD8CC),
+            color: value ? color.withOpacity(0.4) : const Color(0xFFDDD8CC),
             width: value ? 1.5 : 1,
           ),
         ),
@@ -620,7 +685,6 @@ class _DeclarationBox extends StatelessWidget {
                     ),
               ),
             ),
-            // Per-item color checkbox — intentionally overrides theme
             Checkbox(
               value: value,
               onChanged: onChanged,
@@ -628,8 +692,7 @@ class _DeclarationBox extends StatelessWidget {
               checkColor: Colors.white,
               shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4)),
-              side: BorderSide(
-                  color: color.withOpacity(0.5), width: 1.5),
+              side: BorderSide(color: color.withOpacity(0.5), width: 1.5),
               materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
           ],

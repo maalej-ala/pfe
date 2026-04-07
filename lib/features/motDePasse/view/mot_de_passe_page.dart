@@ -1,5 +1,7 @@
-// mot_de_passe_page.dart
+// features/motDePasse/view/mot_de_passe_page.dart
+
 import 'package:flutter/material.dart';
+import 'package:pfe_flutter/features/signature/views/signature_page.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
 import 'package:pfe_flutter/shared/widgets/page_header.dart';
 import 'package:pfe_flutter/shared/widgets/primary_button.dart';
@@ -39,16 +41,29 @@ class _MotDePassePageState extends State<MotDePassePage> {
   }
 
   Future<void> _onSoumettre() async {
-    final success = await _viewModel.soumettre();
+    // Loader
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final (success, errorMessage) = await _viewModel.soumettre();
+
+    if (mounted) Navigator.of(context, rootNavigator: true).pop();
     if (!mounted) return;
+
     if (success) {
-      Navigator.pop(context, _viewModel.state.motDePasse);
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const SignaturePage()),
+      );
     } else {
+      final msg = errorMessage != null
+          ? 'Erreur : $errorMessage'
+          : 'Veuillez corriger les erreurs avant de continuer.';
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Veuillez corriger les erreurs avant de continuer.'),
-          backgroundColor: Colors.redAccent,
-        ),
+        SnackBar(content: Text(msg), backgroundColor: Colors.redAccent),
       );
     }
   }
@@ -58,7 +73,6 @@ class _MotDePassePageState extends State<MotDePassePage> {
     final state = _viewModel.state;
 
     return Scaffold(
-      // scaffoldBackgroundColor from AppTheme
       body: Stack(
         children: [
           HeaderBand(),
@@ -69,14 +83,15 @@ class _MotDePassePageState extends State<MotDePassePage> {
                   currentStep: 7,
                   totalSteps: 8,
                   title: 'Mot de passe',
-                  subtitle: 'Créez un mot de passe sécurisé pour votre compte',
+                  subtitle:
+                      'Créez un mot de passe sécurisé pour votre compte',
                 ),
                 const SizedBox(height: 24),
                 Expanded(
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-                      // ── Password creation card ──────────────────────
+                      // ── Création ────────────────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +101,6 @@ class _MotDePassePageState extends State<MotDePassePage> {
                               title: 'Créer votre mot de passe',
                             ),
                             const SizedBox(height: 20),
-
                             const _Label('Mot de passe'),
                             const SizedBox(height: 8),
                             _PasswordInput(
@@ -98,12 +112,9 @@ class _MotDePassePageState extends State<MotDePassePage> {
                                   _viewModel.toggleMotDePasseVisible,
                             ),
                             const SizedBox(height: 12),
-
                             if (state.motDePasse.isNotEmpty)
                               _StrengthBar(strength: state.strength),
-
                             const SizedBox(height: 20),
-
                             const _Label('Confirmer le mot de passe'),
                             const SizedBox(height: 8),
                             _PasswordInput(
@@ -116,46 +127,21 @@ class _MotDePassePageState extends State<MotDePassePage> {
                               hasError: state.isConfirmationError,
                               isSuccess: state.isConfirmationMatch,
                             ),
-
                             if (state.isConfirmationError) ...[
                               const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  const Icon(Icons.error_outline,
-                                      size: 14, color: Colors.redAccent),
-                                  const SizedBox(width: 4),
-                                  Text(
+                              _InlineMessage(
+                                icon: Icons.error_outline,
+                                text:
                                     'Les mots de passe ne correspondent pas',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Colors.redAccent,
-                                          height: 1,
-                                        ),
-                                  ),
-                                ],
+                                color: Colors.redAccent,
                               ),
                             ],
-
                             if (state.isConfirmationMatch) ...[
                               const SizedBox(height: 6),
-                              Row(
-                                children: [
-                                  Icon(Icons.check_circle_outline,
-                                      size: 14, color: Colors.green.shade600),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'Les mots de passe correspondent',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodySmall
-                                        ?.copyWith(
-                                          color: Colors.green.shade600,
-                                          height: 1,
-                                        ),
-                                  ),
-                                ],
+                              _InlineMessage(
+                                icon: Icons.check_circle_outline,
+                                text: 'Les mots de passe correspondent',
+                                color: Colors.green.shade600,
                               ),
                             ],
                           ],
@@ -164,7 +150,7 @@ class _MotDePassePageState extends State<MotDePassePage> {
 
                       const SizedBox(height: 16),
 
-                      // ── Criteria card ───────────────────────────────
+                      // ── Critères ─────────────────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +199,10 @@ class _MotDePassePageState extends State<MotDePassePage> {
   }
 }
 
-// ── Shared card ──────────────────────────────────────────────
+// ════════════════════════════════════════════════════════════════════
+// WIDGETS
+// ════════════════════════════════════════════════════════════════════
+
 class _FormCard extends StatelessWidget {
   final Widget child;
   const _FormCard({required this.child});
@@ -239,7 +228,6 @@ class _FormCard extends StatelessWidget {
   }
 }
 
-// ── Section title with icon badge ────────────────────────────
 class _SectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -266,7 +254,6 @@ class _SectionTitle extends StatelessWidget {
   }
 }
 
-// ── Field label ──────────────────────────────────────────────
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
@@ -276,7 +263,29 @@ class _Label extends StatelessWidget {
       Text(text, style: Theme.of(context).textTheme.labelMedium);
 }
 
-// ── Password field ───────────────────────────────────────────
+class _InlineMessage extends StatelessWidget {
+  final IconData icon;
+  final String text;
+  final Color color;
+  const _InlineMessage(
+      {required this.icon, required this.text, required this.color});
+
+  @override
+  Widget build(BuildContext context) => Row(
+        children: [
+          Icon(icon, size: 14, color: color),
+          const SizedBox(width: 4),
+          Text(
+            text,
+            style: Theme.of(context)
+                .textTheme
+                .bodySmall
+                ?.copyWith(color: color, height: 1),
+          ),
+        ],
+      );
+}
+
 class _PasswordInput extends StatelessWidget {
   final TextEditingController controller;
   final String hint;
@@ -299,15 +308,21 @@ class _PasswordInput extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = Theme.of(context).iconTheme.color;
-
-    // Semantic border color: error → red, success → green, default → theme
-    Color borderColor = const Color(0xFFE5E0D5);
-    if (hasError) borderColor = Colors.redAccent;
-    if (isSuccess) borderColor = Colors.green;
-
-    Color? fillColor = const Color(0xFFF9F8F5);
-    if (hasError) fillColor = Colors.red.withOpacity(0.03);
-    if (isSuccess) fillColor = Colors.green.withOpacity(0.03);
+    final borderColor = hasError
+        ? Colors.redAccent
+        : isSuccess
+            ? Colors.green
+            : const Color(0xFFE5E0D5);
+    final fillColor = hasError
+        ? Colors.red.withOpacity(0.03)
+        : isSuccess
+            ? Colors.green.withOpacity(0.03)
+            : const Color(0xFFF9F8F5);
+    final focusedColor = hasError
+        ? Colors.redAccent
+        : isSuccess
+            ? Colors.green
+            : Theme.of(context).colorScheme.secondary;
 
     return TextFormField(
       controller: controller,
@@ -316,8 +331,7 @@ class _PasswordInput extends StatelessWidget {
       style: Theme.of(context).textTheme.bodyMedium,
       decoration: InputDecoration(
         hintText: hint,
-        prefixIcon:
-            Icon(Icons.lock_outline, size: 19, color: iconColor),
+        prefixIcon: Icon(Icons.lock_outline, size: 19, color: iconColor),
         suffixIcon: GestureDetector(
           onTap: onToggleVisibility,
           child: Icon(
@@ -328,7 +342,6 @@ class _PasswordInput extends StatelessWidget {
             color: iconColor,
           ),
         ),
-        // Override theme fill/borders only for error/success states
         fillColor: fillColor,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
@@ -336,21 +349,13 @@ class _PasswordInput extends StatelessWidget {
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(
-            color: hasError
-                ? Colors.redAccent
-                : isSuccess
-                    ? Colors.green
-                    : Theme.of(context).colorScheme.secondary,
-            width: 1.5,
-          ),
+          borderSide: BorderSide(color: focusedColor, width: 1.5),
         ),
       ),
     );
   }
 }
 
-// ── Strength bar ─────────────────────────────────────────────
 class _StrengthBar extends StatelessWidget {
   final PasswordStrength strength;
   const _StrengthBar({required this.strength});
@@ -368,8 +373,9 @@ class _StrengthBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          children: List.generate(3, (i) {
-            return Expanded(
+          children: List.generate(
+            3,
+            (i) => Expanded(
               child: Container(
                 margin: EdgeInsets.only(right: i < 2 ? 4 : 0),
                 height: 5,
@@ -378,8 +384,8 @@ class _StrengthBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(4),
                 ),
               ),
-            );
-          }),
+            ),
+          ),
         ),
         const SizedBox(height: 6),
         Row(
@@ -408,7 +414,6 @@ class _StrengthBar extends StatelessWidget {
   }
 }
 
-// ── Single criterion row ─────────────────────────────────────
 class _Criterion extends StatelessWidget {
   final String label;
   final bool met;

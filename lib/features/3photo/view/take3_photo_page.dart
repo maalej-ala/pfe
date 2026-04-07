@@ -134,10 +134,24 @@ class _Take3PhotoPageState extends State<Take3PhotoPage>
                         ],
                         if (totalPhotos == 3) ...[
                           PrimaryButton(
-                            text: 'Terminer la vérification',
-                            onPressed: () => Navigator.pop(context),
-                            enabled: true,
-                          ),
+    text: 'Terminer la vérification',
+    onPressed: () {
+      final photoVisageLive = _viewModel.state.frontFaceExtracted;
+
+      if (photoVisageLive == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Impossible de terminer, la photo live est manquante.'),
+          ),
+        );
+        return;
+      }
+
+      // ⚡ Retourner le fichier à la page précédente
+      Navigator.pop(context, photoVisageLive);
+    },
+    enabled: true,
+  ),
                           const SizedBox(height: 8),
                         ],
                         const SizedBox(height: 16),

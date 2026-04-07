@@ -3,12 +3,15 @@ import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import 'package:pfe_flutter/features/situation_personnelle/models/situation_personnelle_model.dart';
+import 'package:pfe_flutter/shared/services/device_service.dart';
 
 class SituationPersonnelleViewModel extends ChangeNotifier {
   SituationPersonnelleState _state = const SituationPersonnelleState();
   SituationPersonnelleState get state => _state;
 
 Future<void> submitSituationPersonnelle() async {
+              final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
+
   final response = await http.post(
     Uri.parse('http://10.20.30.18:8080/api/situation-personnelle'),
     headers: {'Content-Type': 'application/json'},
@@ -16,6 +19,7 @@ Future<void> submitSituationPersonnelle() async {
       'nationalite': _state.nationalite,
       'statutCivil': _state.statutCivil,
       'nbEnfants':   _state.nbEnfants,
+      'deviceId': deviceId
     }),
   );
 

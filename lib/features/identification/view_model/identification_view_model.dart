@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:pfe_flutter/shared/services/device_service.dart';
 import '../models/identification_state.dart';
 
 class IdentificationViewModel extends ChangeNotifier {
@@ -62,6 +63,7 @@ void updatePhone(String full, String code, String number) {
   return '$year-$month-$day'; // format yyyy-MM-dd
 }
   Future<void> submitIdentification() async {
+        final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
     try {
       final response = await http.post(
         Uri.parse(_baseUrl),
@@ -74,6 +76,7 @@ void updatePhone(String full, String code, String number) {
           'telephone': _state.fullPhone,
   'dateNaissance': formatDateForBackend(_state.dateNaissance), // ✅ format ISO
           'accepteMentions': _state.accepteMentions,
+          'deviceId': deviceId, // 🔥 ajout de l'ID de l'appareil
         }),
       );
 
@@ -93,4 +96,5 @@ if (response.statusCode == 200) {
     rethrow; // 🔥 important pour que le UI catch l'erreur
   }
   }
+
 }

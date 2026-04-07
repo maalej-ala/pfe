@@ -80,7 +80,7 @@ Future<void> _onContinuer() async {
   }
 
   try {
-   // await _viewModel.submitSituationProfessionnelle();
+    await _viewModel.submitSituationProfessionnelle();
 
     Navigator.push(
       context,

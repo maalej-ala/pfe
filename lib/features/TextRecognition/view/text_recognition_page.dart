@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_flutter/shared/widgets/document_scanner.dart';
+import 'package:pfe_flutter/shared/widgets/primary_button.dart';
 import 'package:provider/provider.dart';
 import '../view_models/text_recognition_view_model.dart';
 import 'dart:io';                    // ← AJOUTE CETTE LIGNE
@@ -165,6 +166,34 @@ class _TextRecognitionView extends StatelessWidget {
                             Image.file(vm.extractedFace!, height: 150),
                           ],
                         ),
+                        /// ── BOUTON TERMINER LA VÉRIFICATION ─────────────────────────
+if (vm.selectedImage != null && vm.extractedFace != null)
+  Padding(
+    padding: const EdgeInsets.only(top: 20),
+    child: PrimaryButton(
+      text: 'Terminer la vérification',
+      onPressed: () {
+        final File? cinImage = vm.selectedImage;
+        final File? faceImage = vm.extractedFace;
+
+        if (cinImage == null || faceImage == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Impossible de terminer, certaines images sont manquantes.'),
+            ),
+          );
+          return;
+        }
+
+        // ⚡ Retourner les fichiers à la page précédente
+        Navigator.pop(context, {
+          'cinImage': cinImage,
+          'faceImage': faceImage,
+        });
+      },
+      enabled: true, // tu peux aussi mettre `enabled: cinImage != null && faceImage != null`
+    ),
+  ),
                     ],
                   ),
                 ),

@@ -54,7 +54,7 @@ Future<void> _onContinuer() async {
       );
       return;
     }
-      //  await _viewModel.submitAdresse(); // ✅ envoi backend
+        await _viewModel.submitAdresse(); // ✅ envoi backend
 
     Navigator.push(
         context, MaterialPageRoute(builder: (_) => SituationPersonnellePage( 

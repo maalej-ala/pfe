@@ -45,36 +45,12 @@ class FaceCaptureViewModel extends ChangeNotifier {
 
 
 
-  void _processCameraImage(InputImage inputImage, double brightness) async {
+ void _processCameraImage(InputImage inputImage, double brightness) async {
   if (_isDetecting) return;
   _isDetecting = true;
 
   try {
-    // ── 1. Vérification luminosité ─────────────────────────
-LightLevel newLevel;
-if (brightness > _minBrightness) {
-  newLevel = LightLevel.tooDark;
-} else if (brightness > _maxBrightness) {
-  newLevel = LightLevel.tooLight;
-} else {
-  newLevel = LightLevel.good;
-}
-
-if (newLevel != _lightLevel) {
-  _lightLevel = newLevel;
-  notifyListeners();
-}
-
-
-
-    if (_lightLevel == LightLevel.tooDark) {
-      _updateState(_state.copyWith(
-          faceDirection: '(luminosité act: ${brightness.toStringAsFixed(1)})'));
-    } else if (_lightLevel == LightLevel.tooLight) {
-      _updateState(_state.copyWith(
-          faceDirection: 'réduisez la lumière'));
-    } else {
-    // ── 2. Détection des visages ──────────────────────────
+    // ── Détection des visages ──────────────────────────
     final faces = await _faceService.getFaces(inputImage);
 
     if (faces.isNotEmpty) {
@@ -114,28 +90,25 @@ if (newLevel != _lightLevel) {
           ? distance <= circleRadius * 0.8
           : distance <= circleRadius + faceRadius * 0.5;
 
-     if (isInCircle) {
-    final direction = await _faceService.detectFaceDirection(inputImage);
+      if (isInCircle) {
+        final direction = await _faceService.detectFaceDirection(inputImage);
 
-    // ── Vérification luminosité et messages utilisateur ──
-     {
-      // Luminosité bonne → capture automatique
-      if (direction == 'Front' && _state.facePhotoPath == null) {
-        await _capturePhotoForDirection('Front');
-      } else if (direction == 'Gauche' && _state.gauchePhotoPath == null) {
-        await _capturePhotoForDirection('Gauche');
-      } else if (direction == 'Droite' && _state.droitePhotoPath == null) {
-        await _capturePhotoForDirection('Droite');
+        // Capture automatique selon la direction
+        if (direction == 'Front' && _state.facePhotoPath == null) {
+          await _capturePhotoForDirection('Front');
+        } else if (direction == 'Gauche' && _state.gauchePhotoPath == null) {
+          await _capturePhotoForDirection('Gauche');
+        } else if (direction == 'Droite' && _state.droitePhotoPath == null) {
+          await _capturePhotoForDirection('Droite');
+        }
+
+        _updateState(_state.copyWith(faceDirection: direction));
+      } else {
+        _updateState(_state.copyWith(faceDirection: 'Positionnez le visage dans le cercle'));
       }
-
-      _updateState(_state.copyWith(faceDirection: direction));
+    } else {
+      _updateState(_state.copyWith(faceDirection: 'Aucun visage détecté'));
     }
-  } else {
-    _updateState(_state.copyWith(faceDirection: 'Positionnez le visage dans le cercle'));
-  }
-} else {
-  _updateState(_state.copyWith(faceDirection: 'Aucun visage détecté'));
-}}
   } catch (e) {
     debugPrint("Erreur MLKit: $e");
     _updateState(_state.copyWith(faceDirection: 'Erreur de détection'));
@@ -143,6 +116,7 @@ if (newLevel != _lightLevel) {
     _isDetecting = false;
   }
 }
+
   Future<void> _capturePhotoForDirection(String direction) async {
   final ctrl = _cameraService.controller;
   if (ctrl == null || !ctrl.value.isInitialized) return;

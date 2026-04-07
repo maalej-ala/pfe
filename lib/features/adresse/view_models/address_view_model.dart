@@ -4,9 +4,12 @@ import 'package:country_state_city/country_state_city.dart' as csc;
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pfe_flutter/features/adresse/models/address_model.dart';
+import 'package:pfe_flutter/shared/services/device_service.dart';
 
 class AdresseViewModel extends ChangeNotifier {
   Future<void> submitAdresse() async {
+            final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
+
   final response = await http.post(
     Uri.parse('http://10.20.30.18:8080/api/adresse'),
     headers: {'Content-Type': 'application/json'},
@@ -15,6 +18,8 @@ class AdresseViewModel extends ChangeNotifier {
       'paysNom':     _state.paysNom,
       'gouvernorat': _state.gouvernorat,
       'codePostal':  _state.codePostal,
+                'deviceId': deviceId, // 🔥 ajout de l'ID de l'appareil
+
     }),
   );
 

@@ -251,7 +251,7 @@ IntlPhoneField(
                             onPressed: state.accepteMentions
     ? () async {
         try {
-         // await _viewModel.submitIdentification(); // ✅ ENVOI BACKEND
+          await _viewModel.submitIdentification(); // ✅ ENVOI BACKEND
   print("ISO envoyé: ${_viewModel.state.countryCode}");
 
           Navigator.push(
