@@ -5,12 +5,13 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:pfe_flutter/features/signature/model/signature_state.dart';
+import 'package:pfe_flutter/shared/constantes.dart';
 
 // ══════════════════════════════════════════════════════════════
 //  SERVICE (intégré au ViewModel selon votre architecture)
 // ══════════════════════════════════════════════════════════════
 class _SignatureEditService {
-  static const String _baseUrl = 'http://10.20.30.18:8080/api/signature';
+  static const String _baseUrl = '${AppConstants.baseUrl}/api/signature';
 
   /// Charge les données existantes
   Future<SignatureEditModel> charger(String deviceId) async {

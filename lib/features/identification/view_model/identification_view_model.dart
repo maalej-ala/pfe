@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:pfe_flutter/shared/constantes.dart';
 import 'package:pfe_flutter/shared/services/device_service.dart';
 import '../models/identification_state.dart';
 
@@ -9,7 +10,7 @@ class IdentificationViewModel extends ChangeNotifier {
   IdentificationState get state => _state;
 
   // 🔹 URL de ton backend
-  final String _baseUrl = "http://10.20.30.18:8080/api/identification"; 
+  final String _baseUrl = "${AppConstants.baseUrl}/api/identification"; 
   // ⚠️ Sur vrai appareil, remplacer localhost par l'IP de ton PC
 
   // ─────────── Mise à jour de l'état ───────────

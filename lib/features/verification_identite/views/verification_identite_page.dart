@@ -6,6 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
 import 'package:pfe_flutter/features/3photo/view/take3_photo_page.dart';
 import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.dart';
+import 'package:pfe_flutter/features/verification_identite/models/verification_identite_model.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
 import 'package:pfe_flutter/shared/widgets/page_header.dart';
 import 'package:pfe_flutter/shared/widgets/primary_button.dart';
@@ -24,10 +25,9 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   final _cinController = TextEditingController();
   final _dateDelivranceController = TextEditingController();
 
-  // ── Images reçues via Navigator.pop des sous-pages ────────────────
-  File? _photoCin;        // cinImage  ← TextRecognitionPage
-  File? _photoVisageCin;  // faceImage ← TextRecognitionPage
-  File? _photoVisageLive; // File      ← Take3PhotoPage
+  File? _photoCin;
+  File? _photoVisageCin;
+  File? _photoVisageLive;
 
   @override
   void initState() {
@@ -49,7 +49,6 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     super.dispose();
   }
 
-  // ── Date picker ───────────────────────────────────────────────────
   Future<void> _selectDate() async {
     final colorScheme = Theme.of(context).colorScheme;
     final DateTime? picked = await showDatePicker(
@@ -76,14 +75,11 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     }
   }
 
-  // ── Ouvre TextRecognitionPage et récupère les images via pop ──────
-  // TextRecognitionPage retourne : {'cinImage': File, 'faceImage': File}
   Future<void> _ouvrirScanCin() async {
     final result = await Navigator.push<Map<String, dynamic>>(
       context,
       MaterialPageRoute(builder: (_) => const TextRecognitionPage()),
     );
-
     if (result != null) {
       setState(() {
         if (result['cinImage'] is File) _photoCin = result['cinImage'];
@@ -93,25 +89,21 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     }
   }
 
-  // ── Ouvre Take3PhotoPage et récupère la photo live via pop ────────
-  // Take3PhotoPage retourne : File (frontFaceExtracted)
   Future<void> _ouvrirVerificationLive() async {
     final result = await Navigator.push<File>(
       context,
       MaterialPageRoute(builder: (_) => const Take3PhotoPage()),
     );
-
     if (result != null) {
       setState(() => _photoVisageLive = result);
       _viewModel.updateVerificationsPhotosCompleted(true);
     }
   }
 
-  // ── Soumission finale ─────────────────────────────────────────────
   Future<void> _onSoumettre() async {
     final s = _viewModel.state;
     if (!s.isValid) {
-      String msg = 'Veuillez compléter toutes les étapes de vérification.';
+      String msg = 'Veuillez compléter toutes les étapes.';
       if (s.cin.length != 8)
         msg = 'Le numéro CIN doit contenir 8 chiffres.';
       else if (s.dateDelivrance.isEmpty)
@@ -129,30 +121,39 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
       return;
     }
 
-    showDialog(
-      context: context,
-      barrierDismissible: false,
-      builder: (_) => const Center(child: CircularProgressIndicator()),
-    );
-
     final success = await _viewModel.submitVerification(
       photoCin: _photoCin,
       photoVisageCin: _photoVisageCin,
       photoVisageLive: _photoVisageLive,
     );
 
-    if (mounted) Navigator.of(context, rootNavigator: true).pop();
     if (!mounted) return;
 
     if (success) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const MotDePassePage()),
-      );
+      // // ── Afficher le résultat OCR dans un bottom sheet ─────────────
+      // final result = _viewModel.verificationResult;
+      // if (result != null) {
+      //   await showModalBottomSheet(
+      //     context: context,
+      //     isScrollControlled: true,
+      //     backgroundColor: Colors.transparent,
+      //     builder: (_) => _OcrResultBottomSheet(result: result),
+      //   );
+      // }
+
+      // // ── Si identité vérifiée → continuer ─────────────────────────
+      // if (!mounted) return;
+      // if (result?.identiteVerifiee == true) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const MotDePassePage()),
+        );
+      // }
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Erreur lors de l\'envoi. Vérifiez votre connexion.'),
+        SnackBar(
+          content: Text(_viewModel.errorMessage ??
+              'Erreur lors de l\'envoi. Vérifiez votre connexion.'),
           backgroundColor: Colors.redAccent,
         ),
       );
@@ -162,7 +163,6 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   @override
   Widget build(BuildContext context) {
     final state = _viewModel.state;
-    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       body: Stack(
@@ -182,7 +182,6 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                   child: ListView(
                     padding: const EdgeInsets.symmetric(horizontal: 20),
                     children: [
-
                       // ── 1. Informations CIN ───────────────────────
                       _FormCard(
                         child: Column(
@@ -226,7 +225,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
 
                       const SizedBox(height: 16),
 
-                      // ── 2. Photos CIN Recto + Verso ───────────────
+                      // ── 2. Photos CIN ─────────────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -238,7 +237,6 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                             const SizedBox(height: 16),
                             Row(
                               children: [
-                                // Recto → ouvre TextRecognitionPage
                                 Expanded(
                                   child: _StatusBox(
                                     label: 'CIN Recto',
@@ -250,7 +248,6 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                                   ),
                                 ),
                                 const SizedBox(width: 12),
-                                // Verso → confirmation manuelle
                                 Expanded(
                                   child: _StatusBox(
                                     label: 'CIN Verso',
@@ -270,7 +267,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
 
                       const SizedBox(height: 16),
 
-                      // ── 3. Vérification en direct ─────────────────
+                      // ── 3. Vérification live ──────────────────────
                       _FormCard(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -314,7 +311,8 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                               value: state.estClientAutreBanque,
                               onChanged: _viewModel.updateEstClientAutreBanque,
                               icon: Icons.account_balance_rounded,
-                              text: "Je suis client(e) dans une autre banque",
+                              text:
+                                  "Je suis client(e) dans une autre banque",
                               color: const Color(0xFF2E7D32),
                             ),
                           ],
@@ -323,11 +321,15 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
 
                       const SizedBox(height: 28),
 
-                      PrimaryButton(
-                        text: 'Continuer',
-                        onPressed: _onSoumettre,
-                        enabled: state.isValid,
-                      ),
+                      // ── Bouton soumission ─────────────────────────
+                      _viewModel.isSubmitting
+                          ? const Center(child: CircularProgressIndicator())
+                          : PrimaryButton(
+                              text: 'Continuer',
+                              onPressed: _onSoumettre,
+                              enabled: state.isValid,
+                            ),
+
                       const SizedBox(height: 32),
                     ],
                   ),
@@ -341,14 +343,380 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+//  BOTTOM SHEET — Résultats OCR
+// ══════════════════════════════════════════════════════════════
+
+class _OcrResultBottomSheet extends StatefulWidget {
+  final VerificationResultModel result;
+  const _OcrResultBottomSheet({required this.result});
+
+  @override
+  State<_OcrResultBottomSheet> createState() => _OcrResultBottomSheetState();
+}
+
+class _OcrResultBottomSheetState extends State<_OcrResultBottomSheet> {
+  bool _showRawText = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final result = widget.result;
+    final ocr    = result.ocrExtrait;
+    final colorScheme = Theme.of(context).colorScheme;
+
+    final bool verified = result.identiteVerifiee;
+    final Color statusColor = verified ? Colors.green : Colors.redAccent;
+
+    return DraggableScrollableSheet(
+      initialChildSize: 0.85,
+      minChildSize: 0.5,
+      maxChildSize: 0.95,
+      builder: (_, scrollController) => Container(
+        decoration: BoxDecoration(
+          color: Theme.of(context).scaffoldBackgroundColor,
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+        ),
+        child: Column(
+          children: [
+            // ── Drag handle ───────────────────────────────────
+            const SizedBox(height: 12),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.grey[300],
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 16),
+
+            // ── En-tête statut global ─────────────────────────
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: statusColor.withOpacity(0.08),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: statusColor.withOpacity(0.3)),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      verified
+                          ? Icons.verified_rounded
+                          : Icons.warning_amber_rounded,
+                      color: statusColor,
+                      size: 32,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            verified
+                                ? 'Identité vérifiée ✓'
+                                : 'Vérification échouée',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: statusColor,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            result.message ?? '',
+                            style: Theme.of(context)
+                                .textTheme
+                                .bodySmall
+                                ?.copyWith(color: statusColor.withOpacity(0.8)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // ── Corps scrollable ──────────────────────────────
+            Expanded(
+              child: ListView(
+                controller: scrollController,
+                padding: const EdgeInsets.symmetric(horizontal: 20),
+                children: [
+
+                  // ── Vérification champ par champ ──────────
+                  _SheetSection(
+                    title: 'Vérification des champs',
+                    icon: Icons.checklist_rounded,
+                    child: Column(
+                      children: [
+                        _VerifRow(
+                          label: 'CIN',
+                          saisi: result.cinSaisi,
+                          extrait: result.cinOcr,
+                          valide: result.cinValide,
+                        ),
+                        _VerifRow(
+                          label: 'Nom',
+                          saisi: null,
+                          extrait: result.nomOcr,
+                          valide: result.nomValide,
+                          hideSaisi: true,
+                        ),
+                        _VerifRow(
+                          label: 'Prénom',
+                          saisi: null,
+                          extrait: result.prenomOcr,
+                          valide: result.prenomValide,
+                          hideSaisi: true,
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Champs extraits par OCR ───────────────
+                  if (ocr != null)
+                    _SheetSection(
+                      title: 'Données extraites de la carte',
+                      icon: Icons.document_scanner_outlined,
+                      child: Column(
+                        children: [
+                          _OcrField('Numéro CIN',         ocr.numeroCin),
+                          _OcrField('Nom',                ocr.nom),
+                          _OcrField('Prénom',             ocr.prenom),
+                          _OcrField('Date de naissance',  ocr.dateNaissance),
+                          _OcrField('Sexe',               ocr.sexe),
+                          _OcrField('Lieu de naissance',  ocr.lieuNaissance),
+                          _OcrField('Profession',         ocr.profession),
+                          _OcrField('Date établissement', ocr.dateEtablissement),
+                          _OcrField('Date expiration',    ocr.dateExpiration),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // ── Texte brut OCR (dépliable) ────────────
+                  if (ocr?.rawText != null && ocr!.rawText!.isNotEmpty)
+                    _SheetSection(
+                      title: 'Texte brut Tesseract',
+                      icon: Icons.text_snippet_outlined,
+                      trailing: GestureDetector(
+                        onTap: () =>
+                            setState(() => _showRawText = !_showRawText),
+                        child: Text(
+                          _showRawText ? 'Masquer' : 'Afficher',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.secondary,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                      child: _showRawText
+                          ? Container(
+                              width: double.infinity,
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFF5F3EE),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(
+                                    color: const Color(0xFFE0DDD6)),
+                              ),
+                              child: Text(
+                                ocr.rawText!,
+                                style: const TextStyle(
+                                  fontFamily: 'monospace',
+                                  fontSize: 12,
+                                  height: 1.5,
+                                  letterSpacing: 0.2,
+                                ),
+                              ),
+                            )
+                          : const SizedBox.shrink(),
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  // ── Bouton fermer ─────────────────────────
+                  ElevatedButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Text(verified ? 'Continuer' : 'Fermer'),
+                  ),
+                  const SizedBox(height: 32),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ── Section avec titre ────────────────────────────────────────
+class _SheetSection extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final Widget child;
+  final Widget? trailing;
+
+  const _SheetSection({
+    required this.title,
+    required this.icon,
+    required this.child,
+    this.trailing,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: colorScheme.surface,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: colorScheme.primary.withOpacity(0.06),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(icon, size: 16, color: colorScheme.primary),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(title,
+                    style: Theme.of(context).textTheme.titleMedium),
+              ),
+              if (trailing != null) trailing!,
+            ],
+          ),
+          const SizedBox(height: 12),
+          const Divider(height: 1, color: Color(0xFFF0EDE6)),
+          const SizedBox(height: 10),
+          child,
+        ],
+      ),
+    );
+  }
+}
+
+// ── Ligne de vérification : saisi vs extrait avec icône ──────
+class _VerifRow extends StatelessWidget {
+  final String label;
+  final String? saisi;
+  final String? extrait;
+  final bool valide;
+  final bool hideSaisi;
+
+  const _VerifRow({
+    required this.label,
+    required this.saisi,
+    required this.extrait,
+    required this.valide,
+    this.hideSaisi = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final color = valide ? Colors.green : Colors.redAccent;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 10),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            valide ? Icons.check_circle_rounded : Icons.cancel_rounded,
+            color: color,
+            size: 20,
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(label,
+                    style: Theme.of(context).textTheme.labelMedium),
+                if (!hideSaisi && saisi != null)
+                  Text('Saisi : $saisi',
+                      style: Theme.of(context)
+                          .textTheme
+                          .bodySmall
+                          ?.copyWith(color: const Color(0xFF888888))),
+                Text(
+                  'Carte : ${extrait ?? "non détecté"}',
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Champ OCR simple : label + valeur ────────────────────────
+class _OcrField extends StatelessWidget {
+  final String label;
+  final String? value;
+  const _OcrField(this.label, this.value);
+
+  @override
+  Widget build(BuildContext context) {
+    if (value == null || value!.isEmpty) return const SizedBox.shrink();
+    final colorScheme = Theme.of(context).colorScheme;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          SizedBox(
+            width: 140,
+            child: Text(label,
+                style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: const Color(0xFF888888),
+                      fontWeight: FontWeight.w500,
+                    )),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(value!,
+                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    )),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 // ════════════════════════════════════════════════════════════════════
-// WIDGETS
+// WIDGETS DE LA PAGE PRINCIPALE (inchangés)
 // ════════════════════════════════════════════════════════════════════
 
 class _FormCard extends StatelessWidget {
   final Widget child;
   const _FormCard({required this.child});
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -374,7 +742,6 @@ class _SectionTitle extends StatelessWidget {
   final IconData icon;
   final String title;
   const _SectionTitle({required this.icon, required this.title});
-
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
@@ -399,7 +766,6 @@ class _SectionTitle extends StatelessWidget {
 class _Label extends StatelessWidget {
   final String text;
   const _Label(this.text);
-
   @override
   Widget build(BuildContext context) =>
       Text(text, style: Theme.of(context).textTheme.labelMedium);
@@ -427,7 +793,7 @@ class _Input extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final iconColor = Theme.of(context).iconTheme.color;
-    final iconSize = Theme.of(context).iconTheme.size;
+    final iconSize  = Theme.of(context).iconTheme.size;
     return TextFormField(
       controller: controller,
       keyboardType: keyboardType,
@@ -445,7 +811,6 @@ class _Input extends StatelessWidget {
   }
 }
 
-// ── Box CIN Recto / Verso : icône uniquement, pas de preview photo ──
 class _StatusBox extends StatelessWidget {
   final String label;
   final IconData icon;
@@ -467,7 +832,6 @@ class _StatusBox extends StatelessWidget {
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final doneColor = colorScheme.secondary;
-
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
@@ -491,32 +855,26 @@ class _StatusBox extends StatelessWidget {
               child: isDone
                   ? Icon(Icons.check_circle_rounded,
                       key: const ValueKey('done'),
-                      color: doneColor,
-                      size: 32)
+                      color: doneColor, size: 32)
                   : Icon(icon,
                       key: const ValueKey('idle'),
-                      color: Theme.of(context).iconTheme.color,
-                      size: 28),
+                      color: Theme.of(context).iconTheme.color, size: 28),
             ),
             const SizedBox(height: 8),
-            Text(
-              label,
-              style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                    color: isDone
-                        ? colorScheme.primary
-                        : const Color(0xFF888888),
-                    fontWeight:
-                        isDone ? FontWeight.bold : FontWeight.normal,
-                  ),
-            ),
+            Text(label,
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(
+                      color: isDone
+                          ? colorScheme.primary
+                          : const Color(0xFF888888),
+                      fontWeight:
+                          isDone ? FontWeight.bold : FontWeight.normal,
+                    )),
             const SizedBox(height: 2),
-            Text(
-              isDone ? doneLabel : pendingLabel,
-              style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                    fontSize: 10,
-                    color: isDone ? doneColor : const Color(0xFFAAAAAA),
-                  ),
-            ),
+            Text(isDone ? doneLabel : pendingLabel,
+                style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                      fontSize: 10,
+                      color: isDone ? doneColor : const Color(0xFFAAAAAA),
+                    )),
           ],
         ),
       ),
@@ -524,18 +882,15 @@ class _StatusBox extends StatelessWidget {
   }
 }
 
-// ── Box vérification live : icône uniquement après complétion ────────
 class _LiveVerificationBox extends StatelessWidget {
   final bool isDone;
   final VoidCallback onTap;
-
   const _LiveVerificationBox({required this.isDone, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
     final doneColor = colorScheme.secondary;
-
     return AnimatedContainer(
       duration: const Duration(milliseconds: 250),
       width: double.infinity,
@@ -554,38 +909,28 @@ class _LiveVerificationBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          // Icône centrale animée
           AnimatedSwitcher(
             duration: const Duration(milliseconds: 300),
             child: isDone
                 ? Container(
                     key: const ValueKey('done'),
-                    width: 56,
-                    height: 56,
+                    width: 56, height: 56,
                     decoration: BoxDecoration(
-                      color: doneColor,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: doneColor.withOpacity(0.3),
-                            blurRadius: 12)
-                      ],
+                      color: doneColor, shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(
+                          color: doneColor.withOpacity(0.3), blurRadius: 12)],
                     ),
                     child: const Icon(Icons.check_rounded,
                         color: Colors.white, size: 28),
                   )
                 : Container(
                     key: const ValueKey('idle'),
-                    width: 56,
-                    height: 56,
+                    width: 56, height: 56,
                     decoration: BoxDecoration(
-                      color: colorScheme.primary,
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.25),
-                            blurRadius: 12)
-                      ],
+                      color: colorScheme.primary, shape: BoxShape.circle,
+                      boxShadow: [BoxShadow(
+                          color: colorScheme.primary.withOpacity(0.25),
+                          blurRadius: 12)],
                     ),
                     child: Icon(Icons.videocam_rounded,
                         color: colorScheme.secondary, size: 28),
@@ -593,9 +938,7 @@ class _LiveVerificationBox extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           Text(
-            isDone
-                ? 'Vérification complétée !'
-                : 'Vidéo de vérification en direct',
+            isDone ? 'Vérification complétée !' : 'Vidéo de vérification en direct',
             style: Theme.of(context).textTheme.titleMedium?.copyWith(
                   color: isDone ? doneColor : null,
                   fontWeight: isDone ? FontWeight.bold : null,
@@ -605,7 +948,7 @@ class _LiveVerificationBox extends StatelessWidget {
           Text(
             isDone
                 ? 'Vos 3 photos ont été capturées avec succès'
-                : 'Nous allons vous demander de prendre 3 photos face caméra pour confirmer votre identité',
+                : 'Nous allons vous demander de prendre 3 photos face caméra',
             textAlign: TextAlign.center,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
                   color: isDone
@@ -619,11 +962,9 @@ class _LiveVerificationBox extends StatelessWidget {
             child: OutlinedButton.icon(
               onPressed: onTap,
               icon: Icon(
-                isDone ? Icons.refresh_rounded : Icons.camera_alt_outlined,
-                size: 18,
-              ),
-              label:
-                  Text(isDone ? 'Recommencer' : 'Lancer la vérification'),
+                  isDone ? Icons.refresh_rounded : Icons.camera_alt_outlined,
+                  size: 18),
+              label: Text(isDone ? 'Recommencer' : 'Lancer la vérification'),
               style: OutlinedButton.styleFrom(
                 side: BorderSide(
                     color: isDone ? doneColor : colorScheme.primary,
@@ -640,7 +981,6 @@ class _LiveVerificationBox extends StatelessWidget {
   }
 }
 
-// ── Déclaration checkbox ──────────────────────────────────────────
 class _DeclarationBox extends StatelessWidget {
   final bool value;
   final ValueChanged<bool?> onChanged;
@@ -676,14 +1016,12 @@ class _DeclarationBox extends StatelessWidget {
             Icon(icon, color: color.withOpacity(0.7), size: 20),
             const SizedBox(width: 10),
             Expanded(
-              child: Text(
-                text,
-                style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                      color: const Color(0xFF333333),
-                      fontWeight:
-                          value ? FontWeight.w600 : FontWeight.normal,
-                    ),
-              ),
+              child: Text(text,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: const Color(0xFF333333),
+                        fontWeight:
+                            value ? FontWeight.w600 : FontWeight.normal,
+                      )),
             ),
             Checkbox(
               value: value,

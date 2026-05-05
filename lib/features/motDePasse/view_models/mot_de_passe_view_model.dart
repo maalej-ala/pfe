@@ -3,6 +3,7 @@
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:pfe_flutter/shared/constantes.dart';
 import 'package:pfe_flutter/shared/services/device_service.dart';
 import '../models/mot_de_passe_state.dart';
 
@@ -11,7 +12,7 @@ class MotDePasseViewModel extends ChangeNotifier {
   MotDePasseState get state => _state;
 
   static const String _baseUrl =
-      'http://10.20.30.18:8080/api/mot-de-passe';
+      '${AppConstants.baseUrl}/api/mot-de-passe';
 
   // ── Mise à jour mot de passe ──────────────────────────────
   void updateMotDePasse(String value) {
