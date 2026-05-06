@@ -28,7 +28,23 @@ class _IdentificationPageState extends State<IdentificationPage> {
     super.initState();
     _viewModel = IdentificationViewModel();
     _viewModel.addListener(_updateUI);
+     _loadData();
   }
+
+Future<void> _loadData() async {
+  await _viewModel.loadIdentificationFromBackend();
+
+  // Vérifier si le widget est toujours monté avant d'accéder au state
+  if (!mounted) return;
+
+  final state = _viewModel.model;
+  
+  _nomController.text = state.nom;
+  _prenomController.text = state.prenom;
+  _emailController.text = state.email;
+  _telController.text = state.phoneNumber;
+  _dateController.text = state.dateNaissance;
+}
 
   void _updateUI() {
     if (mounted) setState(() {});
@@ -88,7 +104,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
 
   @override
   Widget build(BuildContext context) {
-    final state = _viewModel.state;
+    final state = _viewModel.model;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -109,32 +125,70 @@ class _IdentificationPageState extends State<IdentificationPage> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    child: Container(
-                      padding: const EdgeInsets.all(24),
-                      decoration: BoxDecoration(
-                        color: colorScheme.surface,
-                        borderRadius: BorderRadius.circular(24),
-                        boxShadow: [
-                          BoxShadow(
-                            color: colorScheme.primary.withOpacity(0.08),
-                            blurRadius: 20,
-                            offset: const Offset(0, 4),
-                          ),
-                        ],
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
+                  child: _viewModel.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : SingleChildScrollView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: Column(
+                            children: [
+                              // Afficher le message d'erreur s'il y en a un
+                              if (_viewModel.errorMessage != null)
+                                Container(
+                                  margin: const EdgeInsets.only(bottom: 16),
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.withValues(alpha: 0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: Colors.red.withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        Icons.error_outline,
+                                        color: Colors.red,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Expanded(
+                                        child: Text(
+                                          _viewModel.errorMessage!,
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 14,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              Container(
+                                padding: const EdgeInsets.all(24),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.surface,
+                                  borderRadius: BorderRadius.circular(24),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colorScheme.primary.withValues(alpha: 0.08),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
                           _SectionLabel(text: 'Civilité'),
                           const SizedBox(height: 10),
                           Row(
                             children: [
                               _CiviliteChip(
-                                label: 'M.',
-                                selected: state.civilite == 'M.',
-                                onTap: () => _viewModel.updateCivilite('M.'),
+                                label: 'M',
+                                selected: state.civilite == 'M',
+                                onTap: () => _viewModel.updateCivilite('M'),
                               ),
                               const SizedBox(width: 12),
                               _CiviliteChip(
@@ -176,7 +230,9 @@ class _IdentificationPageState extends State<IdentificationPage> {
 
 IntlPhoneField(
   controller: _telController,
-  initialCountryCode: 'TN',
+  initialCountryCode: _viewModel.model.countryCode.isNotEmpty 
+      ? _viewModel.model.countryCode 
+      : 'TN',
   keyboardType: TextInputType.phone,
   decoration: InputDecoration(
     hintText: 'Votre numéro de téléphone',
@@ -193,18 +249,16 @@ IntlPhoneField(
   onChanged: (phone) {  
     _viewModel.updatePhone(
       phone.completeNumber,
-  phone.countryISOCode, // ✅ CORRECT
+      phone.countryISOCode, // ✅ CORRECT
       phone.number,
     );
   },
-
-   onCountryChanged: (country) {
+  onCountryChanged: (country) {
     _viewModel.updatePhone(
-      _viewModel.state.fullPhone,
+      _viewModel.model.fullPhone,
       country.code, // ✅ ISO CORRECT (TN, FR...)
-      _viewModel.state.phoneNumber,
+      _viewModel.model.phoneNumber,
     );
-
   },
 ),
 
@@ -247,22 +301,25 @@ IntlPhoneField(
 
                           PrimaryButton(
                             text: 'Continuer',
-                            enabled: state.accepteMentions,
-                            onPressed: state.accepteMentions
+                            enabled: _viewModel.isFormValid && !_viewModel.isLoading,
+                            onPressed: _viewModel.isFormValid && !_viewModel.isLoading
     ? () async {
         try {
           await _viewModel.submitIdentification(); // ✅ ENVOI BACKEND
-  print("ISO envoyé: ${_viewModel.state.countryCode}");
+
+          if (!mounted) return; // Vérifier si le widget est toujours monté
 
           Navigator.push(
             context,
             MaterialPageRoute(
               builder: (_) => AdressePage(
-                      initialCountryIso: _viewModel.state.countryCode,
+                      initialCountryIso: _viewModel.model.countryCode,
               ),
             ),
           );
         } catch (e) {
+          if (!mounted) return; // Vérifier si le widget est toujours monté
+          
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Erreur : $e')),
           );
@@ -270,10 +327,12 @@ IntlPhoneField(
       }
     : null,
                           ),
-                        ],
-                      ),
-                    ),
-                  ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
                 ),
                 const SizedBox(height: 20),
               ],
@@ -404,7 +463,7 @@ class _LegalCheckbox extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           color: accepted
-              ? colorScheme.secondary.withOpacity(0.5)
+              ? colorScheme.secondary.withValues(alpha: 0.5)
               : Colors.transparent,
           width: 1.5,
         ),

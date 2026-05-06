@@ -1,5 +1,84 @@
 // lib/features/verification_identite/models/verification_result_model.dart
 
+// Model for the API response from GET /api/verification-identite/device/{deviceId}
+class VerificationIdentiteApiResponse {
+  final int? id;
+  final String? cin;
+  final String? dateDelivrance;
+  final String? dateExpiration;
+  final bool estClientAutreBanque;
+  final String? photoCinPath;
+  final String? photoVisageCinPath;
+  final String? photoVisageLivePath;
+  final IdentificationData? identification;
+
+  const VerificationIdentiteApiResponse({
+    this.id,
+    this.cin,
+    this.dateDelivrance,
+    this.dateExpiration,
+    this.estClientAutreBanque = false,
+    this.photoCinPath,
+    this.photoVisageCinPath,
+    this.photoVisageLivePath,
+    this.identification,
+  });
+
+  factory VerificationIdentiteApiResponse.fromJson(Map<String, dynamic> json) {
+    return VerificationIdentiteApiResponse(
+      id: json['id'],
+      cin: json['cin'],
+      dateDelivrance: json['dateDelivrance'],
+      dateExpiration: json['dateExpiration'],
+      estClientAutreBanque: json['estClientAutreBanque'] ?? false,
+      photoCinPath: json['photoCinPath'],
+      photoVisageCinPath: json['photoVisageCinPath'],
+      photoVisageLivePath: json['photoVisageLivePath'],
+      identification: json['identification'] != null
+          ? IdentificationData.fromJson(json['identification'])
+          : null,
+    );
+  }
+}
+
+class IdentificationData {
+  final int? id;
+  final String? civilite;
+  final String? nom;
+  final String? prenom;
+  final String? email;
+  final String? telephone;
+  final String? dateNaissance;
+  final bool accepteMentions;
+  final String? deviceId;
+
+  const IdentificationData({
+    this.id,
+    this.civilite,
+    this.nom,
+    this.prenom,
+    this.email,
+    this.telephone,
+    this.dateNaissance,
+    this.accepteMentions = false,
+    this.deviceId,
+  });
+
+  factory IdentificationData.fromJson(Map<String, dynamic> json) {
+    return IdentificationData(
+      id: json['id'],
+      civilite: json['civilite'],
+      nom: json['nom'],
+      prenom: json['prenom'],
+      email: json['email'],
+      telephone: json['telephone'],
+      dateNaissance: json['dateNaissance'],
+      accepteMentions: json['accepteMentions'] ?? false,
+      deviceId: json['deviceId'],
+    );
+  }
+}
+
 class OcrExtraitModel {
   final String? numeroCin;
   final String? nom;
@@ -86,7 +165,7 @@ class VerificationResultModel {
 }
 class VerificationIdentiteState {
   final String cin;
-  final String dateDelivrance;
+  final String dateExpiration;
   final bool hasCinRecto;
   final bool hasCinVerso;
   final bool verificationsPhotosCompleted;
@@ -95,7 +174,7 @@ class VerificationIdentiteState {
 
   const VerificationIdentiteState({
     this.cin = '',
-    this.dateDelivrance = '',
+    this.dateExpiration = '',
     this.hasCinRecto = false,
     this.hasCinVerso = false,
     this.verificationsPhotosCompleted = false,
@@ -105,7 +184,7 @@ class VerificationIdentiteState {
 
   VerificationIdentiteState copyWith({
     String? cin,
-    String? dateDelivrance,
+    String? dateExpiration,
     bool? hasCinRecto,
     bool? hasCinVerso,
     bool? verificationsPhotosCompleted,
@@ -114,7 +193,7 @@ class VerificationIdentiteState {
   }) {
     return VerificationIdentiteState(
       cin: cin ?? this.cin,
-      dateDelivrance: dateDelivrance ?? this.dateDelivrance,
+      dateExpiration: dateExpiration ?? this.dateExpiration,
       hasCinRecto: hasCinRecto ?? this.hasCinRecto,
       hasCinVerso: hasCinVerso ?? this.hasCinVerso,
       verificationsPhotosCompleted:

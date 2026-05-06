@@ -137,7 +137,7 @@ class _SignaturePageState extends State<SignaturePage> {
                     ?.copyWith(fontSize: 18)),
             const SizedBox(height: 12),
             Text(
-              'Votre dossier a été enregistré avec succès. Vous serez contacté prochainement.',
+              'Votre chargé clientèle prendra contact avec vous',
               style: Theme.of(context).textTheme.bodySmall,
               textAlign: TextAlign.center,
             ),

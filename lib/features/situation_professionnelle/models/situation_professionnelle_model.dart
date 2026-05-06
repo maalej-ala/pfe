@@ -25,9 +25,8 @@ class SituationProfessionnelleState {
     );
   }
 
-  bool get isValid =>true;
-      // categorieSocioPro != null &&
-      // revenu.isNotEmpty &&
-      // natureActivite != null &&
-      // secteurActivite != null;
+  bool get isValid => categorieSocioPro != null &&
+      revenu.isNotEmpty &&
+      natureActivite != null &&
+      secteurActivite != null;
 }

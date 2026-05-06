@@ -1,5 +1,6 @@
 // home_page.dart
 import 'package:flutter/material.dart';
+import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.dart';
 import 'package:pfe_flutter/features/identification/views/identification_page.dart';
 import 'package:pfe_flutter/shared/app_colors.dart';
 import 'package:pfe_flutter/shared/constantes.dart';
@@ -160,7 +161,7 @@ class HomePage extends StatelessWidget {
                       onPressed: () => Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (_) => const IdentificationPage()),
+                            builder: (_) => const TextRecognitionPage()),
                       ),
                       // Override theme: gold bg + navy text for this one button
                       style: ElevatedButton.styleFrom(

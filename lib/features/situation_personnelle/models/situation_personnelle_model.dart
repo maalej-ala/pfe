@@ -21,6 +21,5 @@ class SituationPersonnelleState {
     );
   }
 
-  bool get isValid =>true;
-      // nationalite != null && statutCivil != null;
+  bool get isValid => nationalite != null && statutCivil != null;
 }

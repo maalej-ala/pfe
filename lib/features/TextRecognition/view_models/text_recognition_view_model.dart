@@ -1,8 +1,12 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:pfe_flutter/features/TextRecognition/models/text_recognition_model.dart';
+import 'package:pfe_flutter/shared/constantes.dart';
+import 'package:pfe_flutter/shared/services/device_service.dart';
 import 'package:pfe_flutter/shared/services/face_detection_service.dart';
 
 class TextRecognitionViewModel extends ChangeNotifier {
@@ -158,6 +162,11 @@ List<String> get extractedIdCardLines {
   return mergedLines;
 }
 
+String formatDate(String input) {
+  final parts = input.split('-'); // 26-06-1991
+  return "${parts[2]}-${parts[1]}-${parts[0]}"; // 1991-06-26
+}
+
 Map<String, String?> extractID(List<String> lines) {
   final Map<String, String?> data = {
     "numero": null,
@@ -200,7 +209,7 @@ Map<String, String?> extractID(List<String> lines) {
     // "N le: 26-06-1991 Sexe: F"
     if (RegExp(r'^N[eé]?\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
       final dateMatch = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
-      if (dateMatch != null) data["date_naissance"] = dateMatch.group(0);
+      if (dateMatch != null) data["date_naissance"] = formatDate(dateMatch.group(0)!);
 
       final sexeMatch = RegExp(r'Sexe\s*:\s*([MF])', caseSensitive: false)
           .firstMatch(line);
@@ -219,9 +228,9 @@ Map<String, String?> extractID(List<String> lines) {
 
     // ── Lieu de naissance ────────────────────────────────────
     // "A KPALIME VILLE /KLOTO"
-    if (RegExp(r'^A\s+[A-Z]').hasMatch(line) &&
+    if (RegExp(r'^A:?\s+[A-Z]').hasMatch(line) &&
         data["lieu_naissance"] == null) {
-      data["lieu_naissance"] = line.replaceFirst(RegExp(r'^A\s+'), '').trim();
+      data["lieu_naissance"] = line.replaceFirst(RegExp(r'^A:?\s+'), '').trim();
       continue;
     }
 
@@ -236,7 +245,7 @@ if (data["date_etablissement"] == null) {
   if (RegExp(r'(fait|d[ée]livr[ée]|emis)', caseSensitive: false).hasMatch(line)) {
     final m = RegExp(r'\d{2}[-/]\d{2}[-/]\d{4}').firstMatch(line);
     if (m != null) {
-      data["date_etablissement"] = m.group(0);
+      data["date_etablissement"] = formatDate(m.group(0)!);
       continue;
     }
   }
@@ -245,7 +254,7 @@ if (data["date_etablissement"] == null) {
     // ── Expire le ───────────────────────────────────────────
     if (RegExp(r'^Expire\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
       final m = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
-      if (m != null) data["date_expiration"] = m.group(0);
+      if (m != null) data["date_expiration"] = formatDate(m.group(0)!);
       continue;
     }
   }
@@ -265,5 +274,27 @@ String? _extractValue(String line) {
 void disposeRecognizer() {
   _textRecognizer.close();
   _faceService.dispose();
+}
+
+Future<void> sendToBackend(Map<String, String?> data) async {
+  final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
+
+  final url = Uri.parse("${AppConstants.baseUrl}/api/identification");
+
+  final body = {
+    "deviceId": deviceId,
+    "nom": data["nom"],
+    "prenom": data["prenom"],
+    "civilite": data["sexe"],
+    "dateNaissance": data["date_naissance"],
+    "dateExpiration": data["date_expiration"],
+    "numero": data["numero"],
+  };
+
+  await http.post(
+    url,
+    headers: {"Content-Type": "application/json"},
+    body: jsonEncode(body),
+  );
 }
 }

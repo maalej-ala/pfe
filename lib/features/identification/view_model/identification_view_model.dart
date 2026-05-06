@@ -1,41 +1,46 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
-import 'package:http/http.dart' as http;
-import 'package:pfe_flutter/shared/constantes.dart';
 import 'package:pfe_flutter/shared/services/device_service.dart';
 import '../models/identification_state.dart';
+import '../models/identification_model.dart';
+import '../services/identification_service.dart';
 
 class IdentificationViewModel extends ChangeNotifier {
-  IdentificationState _state = const IdentificationState();
-  IdentificationState get state => _state;
+  IdentificationModel _model = const IdentificationModel();
+  IdentificationModel get model => _model;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   // 🔹 URL de ton backend
-  final String _baseUrl = "${AppConstants.baseUrl}/api/identification"; 
+  // final String _baseUrl = "${AppConstants.baseUrl}/api/identification"; 
   // ⚠️ Sur vrai appareil, remplacer localhost par l'IP de ton PC
 
   // ─────────── Mise à jour de l'état ───────────
   void updateCivilite(String value) {
-    _state = _state.copyWith(civilite: value);
+    _model = _model.copyWith(civilite: value);
     notifyListeners();
   }
 
   void updateAccepteMentions(bool value) {
-    _state = _state.copyWith(accepteMentions: value);
+    _model = _model.copyWith(accepteMentions: value);
     notifyListeners();
   }
 
   void updateNom(String value) {
-    _state = _state.copyWith(nom: value);
+    _model = _model.copyWith(nom: value);
     notifyListeners();
   }
 
   void updatePrenom(String value) {
-    _state = _state.copyWith(prenom: value);
+    _model = _model.copyWith(prenom: value);
     notifyListeners();
   }
 
 void updatePhone(String full, String code, String number) {
-  _state = _state.copyWith(
+  _model = _model.copyWith(
     fullPhone: full,
     countryCode: code,
     phoneNumber: number,
@@ -44,12 +49,12 @@ void updatePhone(String full, String code, String number) {
 }
 
   void updateEmail(String value) {
-    _state = _state.copyWith(email: value);
+    _model = _model.copyWith(email: value);
     notifyListeners();
   }
 
   void updateDateNaissance(String value) {
-    _state = _state.copyWith(dateNaissance: value);
+    _model = _model.copyWith(dateNaissance: value);
     notifyListeners();
   }
 
@@ -64,38 +69,120 @@ void updatePhone(String full, String code, String number) {
   return '$year-$month-$day'; // format yyyy-MM-dd
 }
   Future<void> submitIdentification() async {
-        final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
+    final deviceId = await DeviceService().getDeviceId();
+    
     try {
-      final response = await http.post(
-        Uri.parse(_baseUrl),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'civilite': _state.civilite,
-          'nom': _state.nom,
-          'prenom': _state.prenom,
-          'email': _state.email,
-          'telephone': _state.fullPhone,
-  'dateNaissance': formatDateForBackend(_state.dateNaissance), // ✅ format ISO
-          'accepteMentions': _state.accepteMentions,
-          'deviceId': deviceId, // 🔥 ajout de l'ID de l'appareil
-        }),
+      final identificationModel = IdentificationModel(
+        civilite: _model.civilite,
+        nom: _model.nom,
+        prenom: _model.prenom,
+        email: _model.email,
+        fullPhone: _model.fullPhone,
+        dateNaissance: formatDateForBackend(_model.dateNaissance),
+        accepteMentions: _model.accepteMentions,
+        deviceId: deviceId,
       );
 
-if (response.statusCode == 200) {
-      if (kDebugMode) {
-        print("Succès");
-      }
-    } else {
-      final error = jsonDecode(response.body);
-      throw Exception(error['message'] ?? "Erreur inconnue");
-    }
+      await IdentificationService.saveIdentification(identificationModel);
 
-  } catch (e) {
-    if (kDebugMode) {
-      print("Erreur HTTP : $e");
+      if (kDebugMode) {
+        print("Identification sauvegardée avec succès");
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        print("Erreur lors de la sauvegarde : $e");
+      }
+      rethrow;
     }
-    rethrow; // 🔥 important pour que le UI catch l'erreur
   }
+
+  // ─────────── Charger les données depuis le backend ───────────
+  Future<void> loadIdentificationFromBackend() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    try {
+      final deviceId = await DeviceService().getDeviceId();
+      final identificationModel = await IdentificationService.getIdentification(deviceId);
+
+      if (identificationModel != null) {
+        // Convertir la date du format ISO (yyyy-MM-dd) vers le format UI (dd/MM/yyyy)
+        String formattedDate = '';
+        if (identificationModel.dateNaissance != null && identificationModel.dateNaissance!.isNotEmpty) {
+          formattedDate = formatDateForUI(identificationModel.dateNaissance!);
+        }
+
+        // Séparer le numéro de téléphone complet
+        String countryCode = '';
+        String phoneNumber = '';
+        String fullPhone = identificationModel.fullPhone ?? '';
+        
+        if (fullPhone.isNotEmpty) {
+          // Supposer que le format est +216XXXXXXXX
+          if (fullPhone.startsWith('+')) {
+            // Extraire le code pays (ex: +216)
+            final match = RegExp(r'^\+(\d{1,4})(.*)').firstMatch(fullPhone);
+            if (match != null) {
+              countryCode = match.group(1) ?? '';
+              phoneNumber = match.group(2) ?? '';
+            }
+          } else {
+            phoneNumber = fullPhone;
+          }
+        }
+
+        _model = _model.copyWith(
+          civilite: identificationModel.civilite ?? 'M',
+          nom: identificationModel.nom ?? '',
+          prenom: identificationModel.prenom ?? '',
+          email: identificationModel.email ?? '',
+          phoneNumber: phoneNumber,
+          fullPhone: fullPhone,
+          countryCode: countryCode,
+          dateNaissance: formattedDate,
+        );
+      } else {
+        // Aucune donnée trouvée pour ce deviceId, c'est normal pour un nouvel utilisateur
+        if (kDebugMode) {
+          print("Aucune donnée d'identification trouvée pour ce device");
+        }
+      }
+    } catch (e) {
+      _errorMessage = "Erreur lors du chargement des données: $e";
+      if (kDebugMode) {
+        print("Erreur lors du chargement des données d'identification: $e");
+      }
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
+
+  // Convertir la date du format ISO (yyyy-MM-dd) vers le format UI (dd/MM/yyyy)
+  String formatDateForUI(String isoDate) {
+    try {
+      final parts = isoDate.split('-');
+      if (parts.length == 3) {
+        final year = parts[0];
+        final month = parts[1];
+        final day = parts[2];
+        return '$day/$month/$year';
+      }
+      return isoDate;
+    } catch (e) {
+      return isoDate;
+    }
+  }
+
+bool get isFormValid {
+  return _model.civilite.isNotEmpty &&
+         _model.nom.trim().isNotEmpty &&
+         _model.prenom.trim().isNotEmpty &&
+         _model.fullPhone.trim().isNotEmpty &&
+         _model.email.trim().isNotEmpty &&
+         _model.dateNaissance.trim().isNotEmpty &&
+         _model.accepteMentions;
+}
 
 }

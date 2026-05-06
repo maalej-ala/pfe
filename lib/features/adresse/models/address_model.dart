@@ -15,11 +15,11 @@ class AdresseState {
     this.currency = 'USD', // ✅ VALEUR PAR DÉFAUT
   });
 
-  bool get isValid =>true;
-      //adresse.isNotEmpty &&
-     // paysIso != null &&
-      //gouvernorat != null &&
-      //codePostal.isNotEmpty;
+  bool get isValid =>
+      adresse.isNotEmpty &&
+      paysIso != null &&
+      gouvernorat != null &&
+      codePostal.isNotEmpty;
 
   AdresseState copyWith({
     String? adresse,

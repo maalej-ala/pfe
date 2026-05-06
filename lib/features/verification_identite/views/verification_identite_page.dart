@@ -23,7 +23,7 @@ class VerificationIdentitePage extends StatefulWidget {
 class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   late final VerificationIdentiteViewModel _viewModel;
   final _cinController = TextEditingController();
-  final _dateDelivranceController = TextEditingController();
+  final _dateExpirationController = TextEditingController();
 
   File? _photoCin;
   File? _photoVisageCin;
@@ -34,6 +34,19 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     super.initState();
     _viewModel = VerificationIdentiteViewModel();
     _viewModel.addListener(_updateUI);
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    await _viewModel.loadVerificationDataFromBackend();
+
+    // Vérifier si le widget est toujours monté avant d'accéder au state
+    if (!mounted) return;
+
+    final state = _viewModel.state;
+
+    _cinController.text = state.cin;
+    _dateExpirationController.text = state.dateExpiration;
   }
 
   void _updateUI() {
@@ -44,7 +57,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
   void dispose() {
     _viewModel.removeListener(_updateUI);
     _cinController.dispose();
-    _dateDelivranceController.dispose();
+    _dateExpirationController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -53,9 +66,9 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     final colorScheme = Theme.of(context).colorScheme;
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: DateTime(2020),
-      firstDate: DateTime(1990),
-      lastDate: DateTime.now(),
+      initialDate: DateTime.now().add(const Duration(days: 365 * 10)), // 10 ans dans le futur
+      firstDate: DateTime.now(), // Pas de dates passées pour l'expiration
+      lastDate: DateTime.now().add(const Duration(days: 365 * 20)), // 20 ans dans le futur
       builder: (context, child) => Theme(
         data: Theme.of(context).copyWith(
           colorScheme: ColorScheme.dark(
@@ -70,8 +83,8 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     if (picked != null) {
       final formatted =
           '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
-      _dateDelivranceController.text = formatted;
-      _viewModel.updateDateDelivrance(formatted);
+      _dateExpirationController.text = formatted;
+      _viewModel.updateDateExpiration(formatted);
     }
   }
 
@@ -106,8 +119,8 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
       String msg = 'Veuillez compléter toutes les étapes.';
       if (s.cin.length != 8)
         msg = 'Le numéro CIN doit contenir 8 chiffres.';
-      else if (s.dateDelivrance.isEmpty)
-        msg = 'Veuillez saisir la date de délivrance.';
+      else if (s.dateExpiration.isEmpty)
+        msg = 'Veuillez saisir la date d\'expiration.';
       else if (!s.hasCinRecto)
         msg = 'Veuillez scanner votre CIN.';
       else if (!s.verificationsPhotosCompleted)
@@ -179,9 +192,45 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                 ),
                 const SizedBox(height: 24),
                 Expanded(
-                  child: ListView(
-                    padding: const EdgeInsets.symmetric(horizontal: 20),
-                    children: [
+                  child: _viewModel.isLoading
+                      ? const Center(
+                          child: CircularProgressIndicator(),
+                        )
+                      : ListView(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          children: [
+                            // Afficher le message d'erreur s'il y en a un
+                            if (_viewModel.errorMessage != null)
+                              Container(
+                                margin: const EdgeInsets.only(bottom: 16),
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: Colors.red.withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: Colors.red.withValues(alpha: 0.3),
+                                  ),
+                                ),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.error_outline,
+                                      color: Colors.red,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        _viewModel.errorMessage!,
+                                        style: TextStyle(
+                                          color: Colors.red,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
                       // ── 1. Informations CIN ───────────────────────
                       _FormCard(
                         child: Column(
@@ -206,13 +255,13 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                               onChanged: _viewModel.updateCin,
                             ),
                             const SizedBox(height: 16),
-                            const _Label('Date de délivrance CIN'),
+                            const _Label('Date d\'expiration CIN'),
                             const SizedBox(height: 8),
                             GestureDetector(
                               onTap: _selectDate,
                               child: AbsorbPointer(
                                 child: _Input(
-                                  controller: _dateDelivranceController,
+                                  controller: _dateExpirationController,
                                   hint: 'JJ/MM/AAAA',
                                   icon: Icons.event_outlined,
                                   suffixIcon: Icons.calendar_today_outlined,
@@ -223,47 +272,47 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                         ),
                       ),
 
-                      const SizedBox(height: 16),
+                     // const SizedBox(height: 16),
 
                       // ── 2. Photos CIN ─────────────────────────────
-                      _FormCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _SectionTitle(
-                              icon: Icons.photo_camera_outlined,
-                              title: 'Photos de la CIN',
-                            ),
-                            const SizedBox(height: 16),
-                            Row(
-                              children: [
-                                Expanded(
-                                  child: _StatusBox(
-                                    label: 'CIN Recto',
-                                    icon: Icons.flip_to_front_rounded,
-                                    isDone: state.hasCinRecto,
-                                    doneLabel: 'Scanné',
-                                    pendingLabel: 'Scanner',
-                                    onTap: _ouvrirScanCin,
-                                  ),
-                                ),
-                                const SizedBox(width: 12),
-                                Expanded(
-                                  child: _StatusBox(
-                                    label: 'CIN Verso',
-                                    icon: Icons.flip_to_back_rounded,
-                                    isDone: state.hasCinVerso,
-                                    doneLabel: 'Confirmé',
-                                    pendingLabel: 'Confirmer',
-                                    onTap: () =>
-                                        _viewModel.updateHasCinVerso(true),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                      // _FormCard(
+                      //   child: Column(
+                      //     crossAxisAlignment: CrossAxisAlignment.start,
+                      //     children: [
+                      //       const _SectionTitle(
+                      //         icon: Icons.photo_camera_outlined,
+                      //         title: 'Photos de la CIN',
+                      //       ),
+                      //       const SizedBox(height: 16),
+                      //       Row(
+                      //         children: [
+                      //           Expanded(
+                      //             child: _StatusBox(
+                      //               label: 'CIN Recto',
+                      //               icon: Icons.flip_to_front_rounded,
+                      //               isDone: state.hasCinRecto,
+                      //               doneLabel: 'Scanné',
+                      //               pendingLabel: 'Scanner',
+                      //               onTap: _ouvrirScanCin,
+                      //             ),
+                      //           ),
+                      //           const SizedBox(width: 12),
+                      //           Expanded(
+                      //             child: _StatusBox(
+                      //               label: 'CIN Verso',
+                      //               icon: Icons.flip_to_back_rounded,
+                      //               isDone: state.hasCinVerso,
+                      //               doneLabel: 'Confirmé',
+                      //               pendingLabel: 'Confirmer',
+                      //               onTap: () =>
+                      //                   _viewModel.updateHasCinVerso(true),
+                      //             ),
+                      //           ),
+                      //         ],
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
 
                       const SizedBox(height: 16),
 
@@ -327,7 +376,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                           : PrimaryButton(
                               text: 'Continuer',
                               onPressed: _onSoumettre,
-                              enabled: state.isValid,
+                              enabled: state.isValid && !_viewModel.isLoading && !_viewModel.isSubmitting,
                             ),
 
                       const SizedBox(height: 32),
