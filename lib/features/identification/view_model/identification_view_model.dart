@@ -1,6 +1,5 @@
 import 'package:flutter/foundation.dart';
 import 'package:pfe_flutter/shared/services/device_service.dart';
-import '../models/identification_state.dart';
 import '../models/identification_model.dart';
 import '../services/identification_service.dart';
 
@@ -58,6 +57,27 @@ void updatePhone(String full, String code, String number) {
     notifyListeners();
   }
 
+  void updateCin(String value) {
+    _model = _model.copyWith(cin: value);
+    notifyListeners();
+  }
+
+  void updateDateExpiration(String value) {
+    _model = _model.copyWith(dateExpiration: value);
+    notifyListeners();
+  }
+
+  // ─────────── Initialiser avec des paramètres ───────────
+  void initializeWithParams({String? cin, String? dateExpiration}) {
+    if (cin != null || dateExpiration != null) {
+      _model = _model.copyWith(
+        cin: cin ?? _model.cin,
+        dateExpiration: dateExpiration ?? _model.dateExpiration,
+      );
+      notifyListeners();
+    }
+  }
+
   // ─────────── Service pour envoyer l'identification ───────────
   String formatDateForBackend(String date) {
   // date est "JJ/MM/AAAA"
@@ -79,6 +99,8 @@ void updatePhone(String full, String code, String number) {
         email: _model.email,
         fullPhone: _model.fullPhone,
         dateNaissance: formatDateForBackend(_model.dateNaissance),
+        cin: _model.cin,
+        dateExpiration: formatDateForBackend(_model.dateExpiration),
         accepteMentions: _model.accepteMentions,
         deviceId: deviceId,
       );
@@ -116,7 +138,7 @@ void updatePhone(String full, String code, String number) {
         // Séparer le numéro de téléphone complet
         String countryCode = '';
         String phoneNumber = '';
-        String fullPhone = identificationModel.fullPhone ?? '';
+        String fullPhone = identificationModel.fullPhone;
         
         if (fullPhone.isNotEmpty) {
           // Supposer que le format est +216XXXXXXXX
@@ -141,6 +163,8 @@ void updatePhone(String full, String code, String number) {
           fullPhone: fullPhone,
           countryCode: countryCode,
           dateNaissance: formattedDate,
+          cin: identificationModel.cin ?? '',
+          dateExpiration: identificationModel.dateExpiration ?? '',
         );
       } else {
         // Aucune donnée trouvée pour ce deviceId, c'est normal pour un nouvel utilisateur
@@ -182,6 +206,8 @@ bool get isFormValid {
          _model.fullPhone.trim().isNotEmpty &&
          _model.email.trim().isNotEmpty &&
          _model.dateNaissance.trim().isNotEmpty &&
+         _model.cin.trim().isNotEmpty &&
+         _model.dateExpiration.trim().isNotEmpty &&
          _model.accepteMentions;
 }
 

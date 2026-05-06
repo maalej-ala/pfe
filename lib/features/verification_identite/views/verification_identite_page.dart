@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pfe_flutter/features/choix_bancaire/views/choix_bancaire_page.dart';
-import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
 import 'package:pfe_flutter/features/3photo/view/take3_photo_page.dart';
 import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.dart';
 import 'package:pfe_flutter/features/verification_identite/models/verification_identite_model.dart';
@@ -160,7 +159,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
       // if (result?.identiteVerifiee == true) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const ChoixBancairePage()),
+        MaterialPageRoute(builder: (_) => const ChoixBancairePage()),
         );
       // }
     } else {
@@ -233,45 +232,45 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                                 ),
                               ),
                       // ── 1. Informations CIN ───────────────────────
-                      _FormCard(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const _SectionTitle(
-                              icon: Icons.badge_outlined,
-                              title: 'Informations CIN',
-                            ),
-                            const SizedBox(height: 16),
-                            const _Label('Numéro de CIN'),
-                            const SizedBox(height: 8),
-                            _Input(
-                              controller: _cinController,
-                              hint: '8 chiffres',
-                              icon: Icons.badge_outlined,
-                              keyboardType: TextInputType.number,
-                              inputFormatters: [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(8),
-                              ],
-                              onChanged: _viewModel.updateCin,
-                            ),
-                            const SizedBox(height: 16),
-                            const _Label('Date d\'expiration CIN'),
-                            const SizedBox(height: 8),
-                            GestureDetector(
-                              onTap: _selectDate,
-                              child: AbsorbPointer(
-                                child: _Input(
-                                  controller: _dateExpirationController,
-                                  hint: 'JJ/MM/AAAA',
-                                  icon: Icons.event_outlined,
-                                  suffixIcon: Icons.calendar_today_outlined,
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
+                      // _FormCard(
+                      //   child: Column(
+                      //     crossAxisAlignment: CrossAxisAlignment.start,
+                      //     children: [
+                      //       const _SectionTitle(
+                      //         icon: Icons.badge_outlined,
+                      //         title: 'Informations CIN',
+                      //       ),
+                      //       const SizedBox(height: 16),
+                      //       const _Label('Numéro de CIN'),
+                      //       const SizedBox(height: 8),
+                      //       _Input(
+                      //         controller: _cinController,
+                      //         hint: '8 chiffres',
+                      //         icon: Icons.badge_outlined,
+                      //         keyboardType: TextInputType.number,
+                      //         inputFormatters: [
+                      //           FilteringTextInputFormatter.digitsOnly,
+                      //           LengthLimitingTextInputFormatter(8),
+                      //         ],
+                      //         onChanged: _viewModel.updateCin,
+                      //       ),
+                      //       const SizedBox(height: 16),
+                      //       const _Label('Date d\'expiration CIN'),
+                      //       const SizedBox(height: 8),
+                      //       GestureDetector(
+                      //         onTap: _selectDate,
+                      //         child: AbsorbPointer(
+                      //           child: _Input(
+                      //             controller: _dateExpirationController,
+                      //             hint: 'JJ/MM/AAAA',
+                      //             icon: Icons.event_outlined,
+                      //             suffixIcon: Icons.calendar_today_outlined,
+                      //           ),
+                      //         ),
+                      //       ),
+                      //     ],
+                      //   ),
+                      // ),
 
                      // const SizedBox(height: 16),
 
@@ -315,7 +314,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
                       //   ),
                       // ),
 
-                      const SizedBox(height: 16),
+                      //const SizedBox(height: 16),
 
                       // ── 3. Vérification live ──────────────────────
                       _FormCard(

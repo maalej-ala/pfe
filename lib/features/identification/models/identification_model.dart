@@ -10,6 +10,8 @@ class IdentificationModel {
 
   final String email;
   final String dateNaissance;
+  final String cin;
+  final String dateExpiration;
 
   final String deviceId;
 
@@ -23,6 +25,8 @@ class IdentificationModel {
     this.phoneNumber = '',
     this.email = '',
     this.dateNaissance = '',
+    this.cin = '9876-543-2198',
+    this.dateExpiration = '01/01/2030',
     this.deviceId = '',
   });
 
@@ -37,6 +41,8 @@ class IdentificationModel {
     String? phoneNumber,
     String? email,
     String? dateNaissance,
+    String? cin,
+    String? dateExpiration,
     String? deviceId,
   }) {
     return IdentificationModel(
@@ -49,6 +55,8 @@ class IdentificationModel {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       email: email ?? this.email,
       dateNaissance: dateNaissance ?? this.dateNaissance,
+      cin: cin ?? this.cin,
+      dateExpiration: dateExpiration ?? this.dateExpiration,
       deviceId: deviceId ?? this.deviceId,
     );
   }
@@ -62,6 +70,10 @@ class IdentificationModel {
       email: json['email'] ?? '',
       fullPhone: json['telephone'] ?? '',
       dateNaissance: json['dateNaissance'] ?? '',
+    // ✅ CORRECTION ICI
+    cin: json['cin'] ?? '9876-543-2198',
+    dateExpiration: json['dateExpiration'] ?? '01/01/2030',
+
       accepteMentions: json['accepteMentions'] ?? false,
       deviceId: json['deviceId'] ?? '',
     );
@@ -75,6 +87,8 @@ class IdentificationModel {
       'email': email,
       'telephone': fullPhone,
       'dateNaissance': dateNaissance,
+      'cin': cin,
+      'dateExpiration': dateExpiration,
       'accepteMentions': accepteMentions,
       'deviceId': deviceId,
     };

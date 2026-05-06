@@ -8,7 +8,14 @@ import 'package:pfe_flutter/shared/widgets/page_header.dart';
 import 'package:pfe_flutter/shared/widgets/primary_button.dart';
 
 class IdentificationPage extends StatefulWidget {
-  const IdentificationPage({super.key});
+  final String? initialCin;
+  final String? initialDateExpiration;
+  
+  const IdentificationPage({
+    super.key,
+    this.initialCin,
+    this.initialDateExpiration,
+  });
 
   @override
   State<IdentificationPage> createState() => _IdentificationPageState();
@@ -22,13 +29,22 @@ class _IdentificationPageState extends State<IdentificationPage> {
   final _telController = TextEditingController();
   final _emailController = TextEditingController();
   final _dateController = TextEditingController();
+  final _cinController = TextEditingController();
+  final _dateExpirationController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     _viewModel = IdentificationViewModel();
     _viewModel.addListener(_updateUI);
-     _loadData();
+    
+    // Initialiser avec les paramètres passés
+    _viewModel.initializeWithParams(
+      cin: widget.initialCin,
+      dateExpiration: widget.initialDateExpiration,
+    );
+    
+    _loadData();
   }
 
 Future<void> _loadData() async {
@@ -44,6 +60,8 @@ Future<void> _loadData() async {
   _emailController.text = state.email;
   _telController.text = state.phoneNumber;
   _dateController.text = state.dateNaissance;
+  _cinController.text = state.cin;
+  _dateExpirationController.text = state.dateExpiration;
 }
 
   void _updateUI() {
@@ -58,6 +76,8 @@ Future<void> _loadData() async {
     _telController.dispose();
     _emailController.dispose();
     _dateController.dispose();
+    _cinController.dispose();
+    _dateExpirationController.dispose();
     _viewModel.dispose();
     super.dispose();
   }
@@ -77,18 +97,6 @@ Future<void> _loadData() async {
               surface: colorScheme.primary,
               onSurface: Colors.white,
             ),
-//             textButtonTheme: TextButtonThemeData(
-//   style: TextButton.styleFrom(
-//     textStyle: const TextStyle(
-//       fontSize: 24,               // taille du texte
-//       fontWeight: FontWeight.bold, // texte en gras
-//     ),
-//     padding: const EdgeInsets.symmetric(
-//       horizontal: 24,
-//       vertical: 12,
-//     ), // padding du bouton
-//   ),
-// ),
         ),
           child: child!,
         );
@@ -99,6 +107,34 @@ Future<void> _loadData() async {
           '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
       _dateController.text = formatted;
       _viewModel.updateDateNaissance(formatted);
+    }
+  }
+
+  Future<void> _selectExpirationDate() async {
+    final colorScheme = Theme.of(context).colorScheme;
+    final DateTime? picked = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now().add(const Duration(days: 365 * 10)), // 10 ans dans le futur
+      firstDate: DateTime.now(), // Pas de dates passées pour l'expiration
+      lastDate: DateTime.now().add(const Duration(days: 365 * 20)), // 20 ans dans le futur
+      builder: (context, child) {
+        return Theme(
+          data: Theme.of(context).copyWith(
+            colorScheme: ColorScheme.dark(
+              primary: colorScheme.secondary,
+              surface: colorScheme.primary,
+              onSurface: Colors.white,
+            ),
+        ),
+          child: child!,
+        );
+      },
+    );
+    if (picked != null) {
+      final formatted =
+          '${picked.day.toString().padLeft(2, '0')}/${picked.month.toString().padLeft(2, '0')}/${picked.year}';
+      _dateExpirationController.text = formatted;
+      _viewModel.updateDateExpiration(formatted);
     }
   }
 
@@ -283,6 +319,35 @@ IntlPhoneField(
                                 controller: _dateController,
                                 hint: 'JJ/MM/AAAA',
                                 icon: Icons.cake_outlined,
+                                keyboardType: TextInputType.datetime,
+                                suffixIcon: Icons.calendar_today_outlined,
+                              ),
+                            ),
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          _SectionLabel(text: 'Numéro CIN'),
+                          const SizedBox(height: 8),
+                          _InputField(
+                            controller: _cinController,
+                            hint: 'Numéro de votre CIN',
+                            icon: Icons.badge_outlined,
+                            keyboardType: TextInputType.text,
+                            onChanged: _viewModel.updateCin,
+                          ),
+
+                          const SizedBox(height: 20),
+
+                          _SectionLabel(text: 'Date d\'expiration CIN'),
+                          const SizedBox(height: 8),
+                          GestureDetector(
+                            onTap: _selectExpirationDate,
+                            child: AbsorbPointer(
+                              child: _InputField(
+                                controller: _dateExpirationController,
+                                hint: 'JJ/MM/AAAA',
+                                icon: Icons.event_outlined,
                                 keyboardType: TextInputType.datetime,
                                 suffixIcon: Icons.calendar_today_outlined,
                               ),
