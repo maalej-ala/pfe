@@ -1,7 +1,7 @@
 // situation_professionnelle_page.dart
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pfe_flutter/features/choix_bancaire/views/choix_bancaire_page.dart';
+import 'package:pfe_flutter/features/verification_identite/views/verification_identite_page.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
 import 'package:pfe_flutter/shared/widgets/page_header.dart';
 import 'package:pfe_flutter/shared/widgets/primary_button.dart';
@@ -84,7 +84,7 @@ Future<void> _onContinuer() async {
 
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const ChoixBancairePage()),
+      MaterialPageRoute(builder: (_) => const VerificationIdentitePage()),
     );
   } catch (e) {
     ScaffoldMessenger.of(context).showSnackBar(

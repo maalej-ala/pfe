@@ -4,7 +4,7 @@ class SituationPersonnelleState {
   final int nbEnfants;
 
   const SituationPersonnelleState({
-    this.nationalite,
+    this.nationalite='Tunisienne',
     this.statutCivil,
     this.nbEnfants = 0,
   });

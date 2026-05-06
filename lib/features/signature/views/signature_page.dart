@@ -563,11 +563,27 @@ class _SignatureSectionState extends State<_SignatureSection> {
               ),
             ),
             const SizedBox(height: 12),
-            OutlinedButton.icon(
-              onPressed: _clearAndReopen,
-              icon: const Icon(Icons.refresh_rounded, size: 16),
-              label: const Text('Modifier la signature'),
-            ),
+SizedBox(
+  width: double.infinity,
+  child: OutlinedButton.icon(
+    onPressed: _clearAndReopen,
+    icon: const Icon(Icons.refresh_rounded, size: 18),
+    label: const Text(
+      'Modifier la signature',
+      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+    ),
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
+      side: BorderSide(
+        width: 1.5,
+        color: Theme.of(context).colorScheme.secondary.withOpacity(0.5),
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+    ),
+  ),
+),
           ],
 
           // ── Bouton ouvrir le pad ─────────────────────────────
@@ -807,7 +823,7 @@ class _CinSectionState extends State<_CinSection> {
   void initState() {
     super.initState();
     _cinCtrl  = TextEditingController(text: widget.data.cin);
-    _dateCtrl = TextEditingController(text: widget.data.dateDelivrance);
+    _dateCtrl = TextEditingController(text: widget.data.dateExpiration);
   }
   @override
   void dispose() {
@@ -822,7 +838,7 @@ class _CinSectionState extends State<_CinSection> {
     if (!editing) {
       return Column(children: [
         _DataRow(label: 'Numéro CIN',      value: d.cin),
-        _DataRow(label: 'Date délivrance', value: d.dateDelivrance),
+        _DataRow(label: 'Date expiration', value: d.dateExpiration),
         _DataRow(label: 'Client autre banque',
             value: d.estClientAutreBanque ? 'Oui' : 'Non'),
       ]);
@@ -832,9 +848,9 @@ class _CinSectionState extends State<_CinSection> {
       _EditField(controller: _cinCtrl, icon: Icons.credit_card_outlined,
           onChanged: (v) => widget.onUpdate('cin', v)),
       const SizedBox(height: 12),
-      _EditLabel('Date de délivrance'), const SizedBox(height: 6),
+      _EditLabel('Date de expiration'), const SizedBox(height: 6),
       _EditField(controller: _dateCtrl, icon: Icons.calendar_month_outlined,
-          onChanged: (v) => widget.onUpdate('dateDelivrance', v)),
+          onChanged: (v) => widget.onUpdate('dateExpiration', v)),
       const SizedBox(height: 12),
       _BoolToggle(
         label: 'Client autre banque',

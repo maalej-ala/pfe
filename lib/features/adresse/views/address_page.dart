@@ -29,7 +29,10 @@ if (widget.initialCountryIso != null) {
     _viewModel.setCountryFromIso(widget.initialCountryIso!);
   }
 
-  _viewModel.addListener(_updateUI);  }
+  _viewModel.addListener(_updateUI); 
+  _adresseController.text = _viewModel.state.adresse;
+
+   }
 
   void _updateUI() {
     if (mounted) setState(() {});

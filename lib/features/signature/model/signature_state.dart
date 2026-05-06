@@ -11,7 +11,7 @@ class SignatureEditModel {
 
   // ── CIN ───────────────────────────────────────────────────────
   final String? cin;
-  final String? dateDelivrance;
+  final String? dateExpiration;
   final bool estClientAutreBanque;
 
   // ── Adresse ───────────────────────────────────────────────────
@@ -42,7 +42,7 @@ class SignatureEditModel {
     this.telephone,
     this.dateNaissance,
     this.cin,
-    this.dateDelivrance,
+    this.dateExpiration,
     this.estClientAutreBanque = false,
     this.adresse,
     this.paysNom,
@@ -67,7 +67,7 @@ class SignatureEditModel {
         telephone: json['telephone'],
         dateNaissance: json['dateNaissance'],
         cin: json['cin'],
-        dateDelivrance: json['dateDelivrance'],
+        dateExpiration: json['dateExpiration'],
         estClientAutreBanque: json['estClientAutreBanque'] ?? false,
         adresse: json['adresse'],
         paysNom: json['paysNom'],
@@ -91,7 +91,7 @@ class SignatureEditModel {
         'telephone': telephone,
         'dateNaissance': dateNaissance,
         'cin': cin,
-        'dateDelivrance': dateDelivrance,
+        'dateExpiration': dateExpiration,
         'estClientAutreBanque': estClientAutreBanque,
         'adresse': adresse,
         'paysNom': paysNom,
@@ -116,7 +116,7 @@ class SignatureEditModel {
     String? telephone,
     String? dateNaissance,
     String? cin,
-    String? dateDelivrance,
+    String? dateExpiration,
     bool? estClientAutreBanque,
     String? adresse,
     String? paysNom,
@@ -139,7 +139,7 @@ class SignatureEditModel {
         telephone: telephone ?? this.telephone,
         dateNaissance: dateNaissance ?? this.dateNaissance,
         cin: cin ?? this.cin,
-        dateDelivrance: dateDelivrance ?? this.dateDelivrance,
+        dateExpiration: dateExpiration ?? this.dateExpiration,
         estClientAutreBanque: estClientAutreBanque ?? this.estClientAutreBanque,
         adresse: adresse ?? this.adresse,
         paysNom: paysNom ?? this.paysNom,

@@ -102,7 +102,7 @@ class SignatureEditViewModel extends ChangeNotifier {
       telephone:           field == 'telephone'          ? value as String? : null,
       dateNaissance:       field == 'dateNaissance'      ? value as String? : null,
       cin:                 field == 'cin'                ? value as String? : null,
-      dateDelivrance:      field == 'dateDelivrance'     ? value as String? : null,
+      dateExpiration:      field == 'dateExpiration'     ? value as String? : null,
       estClientAutreBanque:field == 'estClientAutreBanque'? value as bool? : null,
       adresse:             field == 'adresse'            ? value as String? : null,
       paysNom:             field == 'paysNom'            ? value as String? : null,

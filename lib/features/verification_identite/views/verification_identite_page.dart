@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:pfe_flutter/features/choix_bancaire/views/choix_bancaire_page.dart';
 import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
 import 'package:pfe_flutter/features/3photo/view/take3_photo_page.dart';
 import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.dart';
@@ -159,7 +160,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
       // if (result?.identiteVerifiee == true) {
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (_) => const MotDePassePage()),
+          MaterialPageRoute(builder: (_) => const ChoixBancairePage()),
         );
       // }
     } else {

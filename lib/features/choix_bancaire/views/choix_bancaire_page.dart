@@ -1,5 +1,6 @@
 // choix_bancaire_page.dart
 import 'package:flutter/material.dart';
+import 'package:pfe_flutter/features/motDePasse/view/mot_de_passe_page.dart';
 import 'package:pfe_flutter/features/verification_identite/views/verification_identite_page.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
 import 'package:pfe_flutter/shared/widgets/page_header.dart';
@@ -56,7 +57,7 @@ class _ChoixBancairePageState extends State<ChoixBancairePage> {
       return;
     }
     Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const VerificationIdentitePage()));
+        MaterialPageRoute(builder: (_) => const MotDePassePage()));
   }
 
   @override
