@@ -95,7 +95,7 @@ class HomePage extends StatelessWidget {
                           height: 130,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.cardBackground,
+                            color: Color(0xFF8C6B2F),
                             boxShadow: [
                               BoxShadow(
                                 color: colorScheme.secondary.withOpacity(0.3),
@@ -237,7 +237,9 @@ class StepDot extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: step.isActive ? colorScheme.secondary : AppColors.darkBlue,
+            color: step.isActive
+    ? colorScheme.primary
+    : colorScheme.secondary.withOpacity(0.25),
             border: Border.all(
               color: colorScheme.secondary.withOpacity(0.4),
               width: 1.5,

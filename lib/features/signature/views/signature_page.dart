@@ -657,12 +657,28 @@ SizedBox(
             Row(
               children: [
                 Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _control.clear,
-                    icon: const Icon(Icons.delete_outline_rounded, size: 16),
-                    label: const Text('Effacer'),
-                  ),
-                ),
+  child: OutlinedButton.icon(
+    onPressed: _control.clear,
+    icon: const Icon(
+      Icons.delete_outline_rounded,
+      size: 18,
+    ),
+    label: const FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        'Effacer',
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+    ),
+    style: OutlinedButton.styleFrom(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 12,
+      ),
+    ),
+  ),
+),
                 const SizedBox(width: 12),
                 Expanded(
                   flex: 2,
