@@ -165,7 +165,7 @@ class _TextRecognitionView extends StatelessWidget {
 
                         // Results Card
                         if (vm.result != null && !vm.isProcessing) ...[
-                          // Extracted Text Card
+                          //Extracted Text Card
                           // Container(
                           //   padding: const EdgeInsets.all(24),
                           //   decoration: BoxDecoration(
@@ -211,48 +211,51 @@ class _TextRecognitionView extends StatelessWidget {
 
                           // const SizedBox(height: 20),
 
-                          // Extracted Data Card
-                          Container(
-                            padding: const EdgeInsets.all(24),
-                            decoration: BoxDecoration(
-                              color: colorScheme.surface,
-                              borderRadius: BorderRadius.circular(24),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: colorScheme.primary.withValues(alpha: 0.08),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 4),
-                                ),
-                              ],
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                _SectionLabel(text: 'Informations extraites'),
-                                const SizedBox(height: 16),
-                                Builder(
-                                  builder: (_) {
-                                    final extracted = vm.extractID(vm.extractedIdCardLines);
-                                    return Column(
-                                      children: [
-                                        _DataRow(label: 'Numéro', value: extracted['numero'] ?? '-'),
-                                        _DataRow(label: 'Nom', value: extracted['nom'] ?? '-'),
-                                        _DataRow(label: 'Prénom', value: extracted['prenom'] ?? '-'),
-                                        _DataRow(label: 'Date de naissance', value: extracted['date_naissance'] ?? '-'),
-                                        _DataRow(label: 'Sexe', value: extracted['sexe'] ?? '-'),
-                                        _DataRow(label: 'Lieu de naissance', value: extracted['lieu_naissance'] ?? '-'),
-                                        _DataRow(label: 'Date d\'établissement', value: extracted['date_etablissement'] ?? '-'),
-                                        _DataRow(label: 'Date d\'expiration', value: extracted['date_expiration'] ?? '-'),
-                                        _DataRow(label: 'Profession', value: extracted['profession'] ?? '-'),
-                                      ],
-                                    );
-                                  },
-                                ),
-                              ],
-                            ),
-                          ),
 
-                          const SizedBox(height: 20),
+
+
+                          // // Extracted Data Card
+                          // Container(
+                          //   padding: const EdgeInsets.all(24),
+                          //   decoration: BoxDecoration(
+                          //     color: colorScheme.surface,
+                          //     borderRadius: BorderRadius.circular(24),
+                          //     boxShadow: [
+                          //       BoxShadow(
+                          //         color: colorScheme.primary.withValues(alpha: 0.08),
+                          //         blurRadius: 20,
+                          //         offset: const Offset(0, 4),
+                          //       ),
+                          //     ],
+                          //   ),
+                          //   child: Column(
+                          //     crossAxisAlignment: CrossAxisAlignment.start,
+                          //     children: [
+                          //       _SectionLabel(text: 'Informations extraites'),
+                          //       const SizedBox(height: 16),
+                          //       Builder(
+                          //         builder: (_) {
+                          //           final extracted = vm.extractID(vm.extractedIdCardLines);
+                          //           return Column(
+                          //             children: [
+                          //               _DataRow(label: 'Numéro', value: extracted['numero'] ?? '-'),
+                          //               _DataRow(label: 'Nom', value: extracted['nom'] ?? '-'),
+                          //               _DataRow(label: 'Prénom', value: extracted['prenom'] ?? '-'),
+                          //               _DataRow(label: 'Date de naissance', value: extracted['date_naissance'] ?? '-'),
+                          //               _DataRow(label: 'Sexe', value: extracted['sexe'] ?? '-'),
+                          //               _DataRow(label: 'Lieu de naissance', value: extracted['lieu_naissance'] ?? '-'),
+                          //               _DataRow(label: 'Date d\'établissement', value: extracted['date_etablissement'] ?? '-'),
+                          //               _DataRow(label: 'Date d\'expiration', value: extracted['date_expiration'] ?? '-'),
+                          //               _DataRow(label: 'Profession', value: extracted['profession'] ?? '-'),
+                          //             ],
+                          //           );
+                          //         },
+                          //       ),
+                          //     ],
+                          //   ),
+                          // ),
+
+                          // const SizedBox(height: 20),
 
                           // Extracted Face Card
                           if (vm.extractedFace != null)

@@ -4,6 +4,7 @@ import 'package:pfe_flutter/features/TextRecognition/view/text_recognition_page.
 import 'package:pfe_flutter/features/identification/views/identification_page.dart';
 import 'package:pfe_flutter/shared/app_colors.dart';
 import 'package:pfe_flutter/shared/constantes.dart';
+import 'package:pfe_flutter/shared/theme/app_theme.dart';
 import '../view_models/home_view_model.dart';
 import '../models/step_model.dart';
 
@@ -17,7 +18,7 @@ class HomePage extends StatelessWidget {
     final textTheme = Theme.of(context).textTheme;
 
     return Scaffold(
-      // scaffoldBackgroundColor → AppColors.primary override for this page only
+      // scaffoldBackgroundColor → AppTheme.primary override for this page only
       backgroundColor: colorScheme.primary,
       body: Stack(
         children: [
@@ -25,12 +26,12 @@ class HomePage extends StatelessWidget {
           Positioned(
             top: -80,
             right: -60,
-            child: _circle(280, AppColors.darkBlue.withOpacity(0.6)),
+            child: _circle(280, AppTheme.darkBlueTone.withOpacity(0.6)),
           ),
           Positioned(
             bottom: -100,
             left: -80,
-            child: _circle(320, AppColors.darkBlue.withOpacity(0.4)),
+            child: _circle(320, AppTheme.darkBlueTone.withOpacity(0.4)),
           ),
           Positioned(
             top: 200,
@@ -95,7 +96,7 @@ class HomePage extends StatelessWidget {
                           height: 130,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: AppColors.cardBackground,
+                            color: AppTheme.cardBackground,
                             boxShadow: [
                               BoxShadow(
                                 color: colorScheme.secondary.withOpacity(0.3),
@@ -237,7 +238,7 @@ class StepDot extends StatelessWidget {
           height: 28,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: step.isActive ? colorScheme.secondary : AppColors.darkBlue,
+            color: step.isActive ? colorScheme.secondary : AppTheme.darkBlueTone,
             border: Border.all(
               color: colorScheme.secondary.withOpacity(0.4),
               width: 1.5,

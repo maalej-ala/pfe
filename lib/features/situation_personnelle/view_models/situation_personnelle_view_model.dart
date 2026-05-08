@@ -19,6 +19,7 @@ Future<void> submitSituationPersonnelle() async {
     body: jsonEncode({
       'nationalite': _state.nationalite,
       'statutCivil': _state.statutCivil,
+      'statutResidence': _state.statutResidence,
       'nbEnfants':   _state.nbEnfants,
       'deviceId': deviceId
     }),
@@ -30,6 +31,10 @@ Future<void> submitSituationPersonnelle() async {
   }
 }
 
+void updateStatutResidence(String value) {
+  _state = _state.copyWith(statutResidence: value);
+  notifyListeners();
+}
   void updateNationalite(String? value) {
     _state = _state.copyWith(nationalite: value);
     notifyListeners();

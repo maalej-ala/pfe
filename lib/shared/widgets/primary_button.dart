@@ -24,27 +24,45 @@ class PrimaryButton extends StatelessWidget {
       height: 54,
       child: ElevatedButton(
         onPressed: enabled ? onPressed : null,
-        // ElevatedButton picks up elevatedButtonTheme from AppTheme
-        // automatically. We only override the icon color here.
+
+        // ✅ Background = secondary
+        style: ElevatedButton.styleFrom(
+          backgroundColor: colorScheme.secondary,
+          foregroundColor: colorScheme.primary,
+          disabledBackgroundColor: Colors.grey.shade400,
+          elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+        ),
+
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text(
               text,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.bold,
                 letterSpacing: 0.3,
+
+                // ✅ Text color = primary
+                color: enabled
+                    ? colorScheme.primary
+                    : Colors.white54,
               ),
             ),
+
             if (icon != null) ...[
               const SizedBox(width: 8),
+
               Icon(
                 icon,
                 size: 18,
-                // Gold accent when active, muted when disabled
+
+                // ✅ Icon color = primary
                 color: enabled
-                    ? colorScheme.secondary
+                    ? colorScheme.primary
                     : Colors.white54,
               ),
             ],

@@ -4,10 +4,10 @@ import 'package:flutter/material.dart';
 class AppTheme {
   // ── Brand palette ────────────────────────────────────────────
   // Light
-  static const _lightPrimary    = Color(0xFF0A2342);
+  static const _lightPrimary    = Color.fromARGB(255, 49, 49, 49);
   static const _lightSecondary  = Color(0xFFC9A84C);
-  static const _lightDarkBlue   = Color(0xFF1A3A5C);
-  static const _lightCardBg     = Color(0xFF122D4E);
+  static const _lightDarkBlue   = Color(0xFF3D3D3D);
+  static const _lightCardBg     = Color.fromARGB(255, 43, 43, 43);
   static const _lightScaffold   = Color(0xFFF5F3EE);
   static const _lightSurface    = Colors.white;
   static const _lightIconColor  = Color(0xFF8899AA);

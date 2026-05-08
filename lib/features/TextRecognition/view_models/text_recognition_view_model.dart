@@ -200,18 +200,18 @@ Map<String, String?> extractID(List<String> lines) {
     }
 
     // ── Prénom ──────────────────────────────────────────────
-    if (RegExp(r'^Pr[eé]nom\s*:?', caseSensitive: false).hasMatch(line)) {
+    if (RegExp(r'Pr[eé]nom\s*:?', caseSensitive: false).hasMatch(line)) {
       data["prenom"] = _extractValue(line);
       continue;
     }
 
     // ── Date naissance + Sexe ────────────────────────────────
     // "N le: 26-06-1991 Sexe: F"
-    if (RegExp(r'^N[eé]?\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
+    if (RegExp(r'N[eé]?\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
       final dateMatch = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
       if (dateMatch != null) data["date_naissance"] = formatDate(dateMatch.group(0)!);
 
-      final sexeMatch = RegExp(r'Sexe\s*:\s*([MF])', caseSensitive: false)
+      final sexeMatch = RegExp(r'Sexe\s*:?\s*([MF])', caseSensitive: false)
           .firstMatch(line);
       if (sexeMatch != null) data["sexe"] = sexeMatch.group(1)?.toUpperCase();
       continue;

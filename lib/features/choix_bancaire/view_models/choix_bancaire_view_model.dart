@@ -14,4 +14,5 @@ class ChoixBancaireViewModel extends ChangeNotifier {
     _state = _state.copyWith(typeCarte: value);
     notifyListeners();
   }
+  
 }

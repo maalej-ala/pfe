@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:pfe_flutter/features/home/view/home_page.dart';
 import 'package:pfe_flutter/shared/theme/app_theme.dart';
+import 'package:pfe_flutter/shared/services/notification_service.dart';
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
 
-void main() {
+  await NotificationService.initialize();
+
   runApp(const BankApp());
 }
 
