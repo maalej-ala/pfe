@@ -7,7 +7,7 @@ class AdresseState {
   final String currency; // ✅ AJOUT
 
   const AdresseState({
-    this.adresse = 'EXEMPLE VILLE/CITE',
+    this.adresse = 'TUNIS CENTRE',
     this.paysIso,
     this.paysNom,
     this.gouvernorat,

@@ -200,10 +200,14 @@ Map<String, String?> extractID(List<String> lines) {
     }
 
     // ── Prénom ──────────────────────────────────────────────
-    if (RegExp(r'Pr[eé]nom\s*:?', caseSensitive: false).hasMatch(line)) {
-      data["prenom"] = _extractValue(line);
-      continue;
-    }
+final prenomMatch = RegExp(
+  r'Pr[eé]nom\s*:?\s*(.*?)\s*(?=N[eé]?\s*le|Ne\s*le|N\s*le|Sexe|$)',
+  caseSensitive: false,
+).firstMatch(line);
+
+if (prenomMatch != null) {
+  data["prenom"] = prenomMatch.group(1)?.trim();
+}
 
     // ── Date naissance + Sexe ────────────────────────────────
     // "N le: 26-06-1991 Sexe: F"

@@ -257,59 +257,63 @@ class _TextRecognitionView extends StatelessWidget {
 
                           // const SizedBox(height: 20),
 
+
+
                           // Extracted Face Card
-                          if (vm.extractedFace != null)
-                            Container(
-                              padding: const EdgeInsets.all(24),
-                              decoration: BoxDecoration(
-                                color: colorScheme.surface,
-                                borderRadius: BorderRadius.circular(24),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: colorScheme.primary.withValues(alpha: 0.08),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 4),
-                                  ),
-                                ],
-                              ),
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  _SectionLabel(text: 'Visage extrait'),
-                                  const SizedBox(height: 16),
-                                  Center(
-                                    child: Container(
-                                      decoration: BoxDecoration(
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: colorScheme.primary.withValues(alpha: 0.1),
-                                            blurRadius: 10,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: ClipRRect(
-                                        borderRadius: BorderRadius.circular(16),
-                                        child: Image.file(
-                                          vm.extractedFace!,
-                                          height: 150,
-                                          width: 150,
-                                          fit: BoxFit.cover,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
+                          
+                          
+                          // if (vm.extractedFace != null)
+                          //   Container(
+                          //     padding: const EdgeInsets.all(24),
+                          //     decoration: BoxDecoration(
+                          //       color: colorScheme.surface,
+                          //       borderRadius: BorderRadius.circular(24),
+                          //       boxShadow: [
+                          //         BoxShadow(
+                          //           color: colorScheme.primary.withValues(alpha: 0.08),
+                          //           blurRadius: 20,
+                          //           offset: const Offset(0, 4),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //     child: Column(
+                          //       crossAxisAlignment: CrossAxisAlignment.start,
+                          //       children: [
+                          //         _SectionLabel(text: 'Visage extrait'),
+                          //         const SizedBox(height: 16),
+                          //         Center(
+                          //           child: Container(
+                          //             decoration: BoxDecoration(
+                          //               borderRadius: BorderRadius.circular(16),
+                          //               boxShadow: [
+                          //                 BoxShadow(
+                          //                   color: colorScheme.primary.withValues(alpha: 0.1),
+                          //                   blurRadius: 10,
+                          //                   offset: const Offset(0, 2),
+                          //                 ),
+                          //               ],
+                          //             ),
+                          //             child: ClipRRect(
+                          //               borderRadius: BorderRadius.circular(16),
+                          //               child: Image.file(
+                          //                 vm.extractedFace!,
+                          //                 height: 150,
+                          //                 width: 150,
+                          //                 fit: BoxFit.cover,
+                          //               ),
+                          //             ),
+                          //           ),
+                          //         ),
+                          //       ],
+                          //     ),
+                          //   ),
 
                           const SizedBox(height: 20),
 
                           // Complete Button
                           if (vm.selectedImage != null && vm.extractedFace != null)
                             PrimaryButton(
-                              text: 'Terminer la vérification',
+                              text: 'Continuer',
                               onPressed: () => _completeVerification(context, vm),
                             ),
                         ],

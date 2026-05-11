@@ -14,7 +14,7 @@ const _packsCourant = [
   {
     'nom': 'PACK ALTITUDE CLASSIQUE',
     'desc': "L'offre Altitude Classique vous accompagne dans votre expérience bancaire quotidienne.",
-    'tarif': '10 000 XAF / mois',
+    'tarif': '10  TND / mois',
     'icon': Icons.credit_card_rounded,
     'avantages': [
       'Dépôt initial',
@@ -26,7 +26,7 @@ const _packsCourant = [
   {
     'nom': 'PACK ALTITUDE PRIVILEGE',
     'desc': "L'offre Altitude Privilège vous offre des avantages exclusifs pour votre compte courant.",
-    'tarif': '15 000 XAF / mois',
+    'tarif': '15  TND / mois',
     'icon': Icons.star_rounded,
     'avantages': [
       'Dépôt initial',
@@ -39,7 +39,7 @@ const _packsCourant = [
   {
     'nom': 'PACK ACTIVA',
     'desc': "L'offre Activa est idéale pour une gestion simple et efficace de votre compte courant.",
-    'tarif': '5 000 XAF / mois',
+    'tarif': '5  TND / mois',
     'icon': Icons.flash_on_rounded,
     'avantages': [
       'Dépôt initial',
@@ -57,7 +57,7 @@ const _packsEpargne = [
     'tarif': 'Taux : 3,5 % / an',
     'icon': Icons.savings_rounded,
     'avantages': [
-      'Ouverture dès 10 000 XAF',
+      'Ouverture dès 10  TND',
       'Versements libres',
       'Retrait à tout moment',
       'Relevé mensuel en ligne',
@@ -69,7 +69,7 @@ const _packsEpargne = [
     'tarif': 'Taux : 5,25 % / an',
     'icon': Icons.trending_up_rounded,
     'avantages': [
-      'Ouverture dès 50 000 XAF',
+      'Ouverture dès 50  TND',
       'Versements programmés',
       'Taux bonifié garanti 12 mois',
       'Relevé mensuel en ligne',
@@ -83,7 +83,7 @@ const _packsEpargne = [
     'icon': Icons.school_rounded,
     'avantages': [
       'Réservé aux moins de 25 ans',
-      'Ouverture dès 5 000 XAF',
+      'Ouverture dès 5  TND',
       'Aucun frais de gestion',
       'Carte prépayée offerte',
       'Online Banking',
@@ -95,7 +95,7 @@ const _packsDeux = [
   {
     'nom': 'PACK DUO ESSENTIEL',
     'desc': "Combinez un compte courant et un compte épargne dans une offre tout-en-un accessible.",
-    'tarif': '12 000 XAF / mois',
+    'tarif': '12  TND / mois',
     'icon': Icons.account_balance_wallet_rounded,
     'avantages': [
       'Compte courant + Compte épargne',
@@ -108,7 +108,7 @@ const _packsDeux = [
   {
     'nom': 'PACK DUO PRIVILEGE',
     'desc': "L'excellence bancaire au quotidien : deux comptes, un seul pack, des avantages premium.",
-    'tarif': '20 000 XAF / mois',
+    'tarif': '20  TND / mois',
     'icon': Icons.diamond_rounded,
     'avantages': [
       'Compte courant + Compte épargne',
@@ -123,7 +123,7 @@ const _packsDeux = [
   {
     'nom': 'PACK DUO ACTIVA',
     'desc': "La formule duo la plus accessible pour démarrer votre double projet bancaire.",
-    'tarif': '8 000 XAF / mois',
+    'tarif': '8  TND / mois',
     'icon': Icons.swap_horiz_rounded,
     'avantages': [
       'Compte courant + Compte épargne',
