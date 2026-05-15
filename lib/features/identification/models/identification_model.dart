@@ -16,7 +16,7 @@ class IdentificationModel {
   final String deviceId;
 
   const IdentificationModel({
-    this.civilite = 'M.',
+    this.civilite = '',
     this.accepteMentions = false,
     this.nom = '',
     this.prenom = '',
@@ -25,8 +25,8 @@ class IdentificationModel {
     this.phoneNumber = '',
     this.email = '',
     this.dateNaissance = '',
-    this.cin = '9876-543-2198',
-    this.dateExpiration = '01/01/2030',
+    this.cin = '',
+    this.dateExpiration = '',
     this.deviceId = '',
   });
 
@@ -64,15 +64,15 @@ class IdentificationModel {
   // ✅ JSON
   factory IdentificationModel.fromJson(Map<String, dynamic> json) {
     return IdentificationModel(
-      civilite: json['civilite'] ?? 'M.',
+      civilite: json['civilite'] ?? '',
       nom: json['nom'] ?? '',
       prenom: json['prenom'] ?? '',
       email: json['email'] ?? '',
       fullPhone: json['telephone'] ?? '',
       dateNaissance: json['dateNaissance'] ?? '',
     // ✅ CORRECTION ICI
-    cin: json['cin'] ?? '9876-543-2198',
-    dateExpiration: json['dateExpiration'] ?? '01/01/2030',
+    cin: json['cin'] ?? '',
+    dateExpiration: json['dateExpiration'] ?? '',
 
       accepteMentions: json['accepteMentions'] ?? false,
       deviceId: json['deviceId'] ?? '',

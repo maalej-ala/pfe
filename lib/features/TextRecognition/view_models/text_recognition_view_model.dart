@@ -281,24 +281,47 @@ void disposeRecognizer() {
 }
 
 Future<void> sendToBackend(Map<String, String?> data) async {
-  final deviceId = await DeviceService().getDeviceId(); // 🔥 ici
 
-  final url = Uri.parse("${AppConstants.baseUrl}/api/identification");
+  final deviceId = await DeviceService().getDeviceId();
 
-  final body = {
-    "deviceId": deviceId,
-    "nom": data["nom"],
-    "prenom": data["prenom"],
-    "civilite": data["sexe"],
-    "dateNaissance": data["date_naissance"],
-    "dateExpiration": data["date_expiration"],
-    "numero": data["numero"],
-  };
+  final url = Uri.parse("${AppConstants.baseUrl}/api/ocr");
 
-  await http.post(
+  final request = http.MultipartRequest(
+    'POST',
     url,
-    headers: {"Content-Type": "application/json"},
-    body: jsonEncode(body),
   );
+
+  // 🔥 JSON fields
+  request.fields['deviceId'] = deviceId;
+  request.fields['nom'] = data["nom"] ?? "";
+  request.fields['prenom'] = data["prenom"] ?? "";
+  request.fields['sexe'] = data["sexe"] ?? "";
+  request.fields['dateNaissance'] = data["date_naissance"] ?? "";
+  request.fields['dateExpiration'] = data["date_expiration"] ?? "";
+  request.fields['numeroCin'] = data["numero"] ?? "";
+
+  // 🔥 image CIN
+  if (selectedImage != null) {
+
+    request.files.add(
+      await http.MultipartFile.fromPath(
+        'photoCin',
+        selectedImage!.path,
+      ),
+    );
+  }
+
+  final response = await request.send();
+
+  final responseBody = await response.stream.bytesToString();
+
+  debugPrint("STATUS: ${response.statusCode}");
+  debugPrint("BODY: $responseBody");
+
+  if (response.statusCode != 200 &&
+      response.statusCode != 201) {
+
+    throw Exception("Erreur upload OCR");
+  }
 }
 }

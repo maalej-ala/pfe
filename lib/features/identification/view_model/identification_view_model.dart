@@ -68,15 +68,6 @@ void updatePhone(String full, String code, String number) {
   }
 
   // ─────────── Initialiser avec des paramètres ───────────
-  void initializeWithParams({String? cin, String? dateExpiration}) {
-    if (cin != null || dateExpiration != null) {
-      _model = _model.copyWith(
-        cin: cin ?? _model.cin,
-        dateExpiration: dateExpiration ?? _model.dateExpiration,
-      );
-      notifyListeners();
-    }
-  }
 
   // ─────────── Service pour envoyer l'identification ───────────
   String formatDateForBackend(String date) {
@@ -134,6 +125,10 @@ void updatePhone(String full, String code, String number) {
         if (identificationModel.dateNaissance != null && identificationModel.dateNaissance!.isNotEmpty) {
           formattedDate = formatDateForUI(identificationModel.dateNaissance!);
         }
+        String formattedExpirationDate = '';
+        if (identificationModel.dateExpiration != null && identificationModel.dateExpiration!.isNotEmpty) {
+          formattedExpirationDate = formatDateForUI(identificationModel.dateExpiration!);
+        }
 
         // Séparer le numéro de téléphone complet
         String countryCode = '';
@@ -155,7 +150,7 @@ void updatePhone(String full, String code, String number) {
         }
 
         _model = _model.copyWith(
-          civilite: identificationModel.civilite ?? 'M',
+          civilite: identificationModel.civilite ?? '',
           nom: identificationModel.nom ?? '',
           prenom: identificationModel.prenom ?? '',
           email: identificationModel.email ?? '',
@@ -164,7 +159,7 @@ void updatePhone(String full, String code, String number) {
           countryCode: countryCode,
           dateNaissance: formattedDate,
           cin: identificationModel.cin ?? '',
-          dateExpiration: identificationModel.dateExpiration ?? '',
+          dateExpiration: formattedExpirationDate,
         );
       } else {
         // Aucune donnée trouvée pour ce deviceId, c'est normal pour un nouvel utilisateur

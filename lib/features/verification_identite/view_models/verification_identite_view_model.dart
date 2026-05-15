@@ -16,87 +16,19 @@ class VerificationIdentiteViewModel extends ChangeNotifier {
   VerificationIdentiteState get state => _state;
 
   // ── Résultat du backend après soumission ──────────────────────────
-  VerificationResultModel? verificationResult;
   bool isSubmitting = false;
   bool _isLoading = false;
   bool get isLoading => _isLoading;
   String? errorMessage;
 
-  // ── Charger les données depuis le backend ─────────────────────────
-  Future<void> loadVerificationDataFromBackend() async {
-    _isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-
-    try {
-      final deviceId = await DeviceService().getDeviceId();
-      final response = await http.get(
-        Uri.parse('$_baseUrl/api/verification-identite/device/$deviceId'),
-      );
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body) as Map<String, dynamic>;
-        final apiResponse = VerificationIdentiteApiResponse.fromJson(data);
-        
-        // Convertir les dates du format ISO (yyyy-MM-dd) vers le format UI (dd/MM/yyyy)
-        String formattedDateExpiration = '';
-        if (apiResponse.dateExpiration != null && apiResponse.dateExpiration!.isNotEmpty) {
-          formattedDateExpiration = _formatDateForUI(apiResponse.dateExpiration!);
-        }
-
-        _state = _state.copyWith(
-          cin: apiResponse.cin ?? '',
-          dateExpiration: formattedDateExpiration,
-          estClientAutreBanque: apiResponse.estClientAutreBanque,
-        );
-
-        if (kDebugMode) {
-          print("Données de vérification chargées: CIN=${apiResponse.cin}, dateExpiration=${apiResponse.dateExpiration}, estClientAutreBanque=${apiResponse.estClientAutreBanque}");
-        }
-      } else if (response.statusCode == 404) {
-        // Aucune donnée trouvée pour ce deviceId, c'est normal pour un nouvel utilisateur
-        if (kDebugMode) {
-          print("Aucune donnée de vérification trouvée pour ce device");
-        }
-      } else {
-        throw Exception("Erreur lors du chargement des données: ${response.statusCode}");
-      }
-    } catch (e) {
-      errorMessage = "Erreur lors du chargement des données: $e";
-      if (kDebugMode) {
-        print("Erreur lors du chargement des données de vérification: $e");
-      }
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Convertir la date du format ISO (yyyy-MM-dd) vers le format UI (dd/MM/yyyy)
-  String _formatDateForUI(String isoDate) {
-    try {
-      final parts = isoDate.split('-');
-      if (parts.length == 3) {
-        final year = parts[0];
-        final month = parts[1];
-        final day = parts[2];
-        return '$day/$month/$year';
-      }
-      return isoDate;
-    } catch (e) {
-      return isoDate;
-    }
-  }
+  
 
   // ── Soumission backend ────────────────────────────────────────────
   Future<bool> submitVerification({
-    File? photoCin,
-    File? photoVisageCin,
     File? photoVisageLive,
   }) async {
     isSubmitting = true;
     errorMessage = null;
-    verificationResult = null;
     notifyListeners();
 
     try {
@@ -106,20 +38,11 @@ class VerificationIdentiteViewModel extends ChangeNotifier {
       final request = http.MultipartRequest('POST', uri);
 
       // ── Champs texte ─────────────────────────────────────────────
-      request.fields['cin']                  = _state.cin;
       request.fields['deviceId']             = deviceId;
-      request.fields['dateExpiration']       = _convertDate(_state.dateExpiration);
       request.fields['estClientAutreBanque'] = _state.estClientAutreBanque.toString();
 
       // ── Images ───────────────────────────────────────────────────
-      if (photoCin != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('photoCin', photoCin.path));
-      }
-      if (photoVisageCin != null) {
-        request.files.add(
-            await http.MultipartFile.fromPath('photoVisageCin', photoVisageCin.path));
-      }
+
       if (photoVisageLive != null) {
         request.files.add(
             await http.MultipartFile.fromPath('photoVisageLive', photoVisageLive.path));
@@ -135,9 +58,7 @@ class VerificationIdentiteViewModel extends ChangeNotifier {
       final response = await http.Response.fromStream(streamed);
 
       if (response.statusCode == 200) {
-        final json = jsonDecode(response.body) as Map<String, dynamic>;
-        verificationResult = VerificationResultModel.fromJson(json);
-        debugPrint('✅ OCR result: identiteVerifiee=${verificationResult!.identiteVerifiee}');
+        
         notifyListeners();
         return true;
       } else {
@@ -157,12 +78,6 @@ class VerificationIdentiteViewModel extends ChangeNotifier {
     }
   }
 
-  // ── Utilitaire : "dd/MM/yyyy" → "yyyy-MM-dd" ─────────────────────
-  String _convertDate(String date) {
-    final parts = date.split('/');
-    if (parts.length == 3) return '${parts[2]}-${parts[1]}-${parts[0]}';
-    return date;
-  }
 
   // ── Mise à jour de l'état ─────────────────────────────────────────
   void updateCin(String value) {

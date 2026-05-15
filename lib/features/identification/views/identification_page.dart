@@ -1,7 +1,6 @@
 // identification_page.dart
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
-import 'package:pfe_flutter/features/adresse/views/address_page.dart';
 import 'package:pfe_flutter/features/identification/view_model/identification_view_model.dart';
 import 'package:pfe_flutter/features/otp_verification_page.dart';
 import 'package:pfe_flutter/shared/widgets/header_band.dart';
@@ -40,10 +39,7 @@ class _IdentificationPageState extends State<IdentificationPage> {
     _viewModel.addListener(_updateUI);
     
     // Initialiser avec les paramètres passés
-    _viewModel.initializeWithParams(
-      cin: widget.initialCin,
-      dateExpiration: widget.initialDateExpiration,
-    );
+
     
     _loadData();
   }
