@@ -80,25 +80,7 @@ class VerificationIdentiteViewModel extends ChangeNotifier {
 
 
   // ── Mise à jour de l'état ─────────────────────────────────────────
-  void updateCin(String value) {
-    _state = _state.copyWith(cin: value);
-    notifyListeners();
-  }
 
-  void updateDateExpiration(String value) {
-    _state = _state.copyWith(dateExpiration: value);
-    notifyListeners();
-  }
-
-  void updateHasCinRecto(bool value) {
-    _state = _state.copyWith(hasCinRecto: value);
-    notifyListeners();
-  }
-
-  void updateHasCinVerso(bool value) {
-    _state = _state.copyWith(hasCinVerso: value);
-    notifyListeners();
-  }
 
   void updateVerificationsPhotosCompleted(bool value) {
     _state = _state.copyWith(verificationsPhotosCompleted: value);

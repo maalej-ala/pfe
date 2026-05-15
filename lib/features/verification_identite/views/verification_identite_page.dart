@@ -62,13 +62,7 @@ class _VerificationIdentitePageState extends State<VerificationIdentitePage> {
     final s = _viewModel.state;
     if (!s.isValid) {
       String msg = 'Veuillez compléter toutes les étapes.';
-      if (s.cin.length != 8)
-        msg = 'Le numéro CIN doit contenir 8 chiffres.';
-      else if (s.dateExpiration.isEmpty)
-        msg = 'Veuillez saisir la date d\'expiration.';
-      else if (!s.hasCinRecto)
-        msg = 'Veuillez scanner votre CIN.';
-      else if (!s.verificationsPhotosCompleted)
+if (!s.verificationsPhotosCompleted)
         msg = 'Veuillez compléter la vérification vidéo.';
       else if (!s.confirmeSansAmericanite)
         msg = 'Veuillez confirmer la déclaration FATCA.';
