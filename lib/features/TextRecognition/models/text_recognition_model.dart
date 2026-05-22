@@ -10,6 +10,7 @@ class TextRecognitionModel {
   final String? profession;
   final String? dateDelivrance;
   final String? dateExpiration;
+  final String? adresseDomicile;   // 🔥 NEW
 
   // 🔥 NEW
   final File? cinImage;
@@ -25,6 +26,7 @@ class TextRecognitionModel {
     this.profession,
     this.dateDelivrance,
     this.dateExpiration,
+    this.adresseDomicile,
     this.cinImage,
     this.faceImage,
   });
@@ -44,6 +46,7 @@ class TextRecognitionModel {
       profession: map['profession'],
       dateDelivrance: map['date_etablissement'],
       dateExpiration: map['date_expiration'],
+      adresseDomicile: map['adresse_domicile'], // 🔥 NEW
       cinImage: cinImage,     // ✅ NEW
       faceImage: faceImage,   // ✅ NEW
     );

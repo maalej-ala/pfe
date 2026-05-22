@@ -36,49 +36,70 @@ class FaceDetectionService {
   /// Extrait le visage d'une image de carte d'identité (suppose un seul visage).
   /// Retourne un fichier temporaire contenant le visage recadré, ou null si aucun visage détecté.
   Future<File?> extractFaceFromFile(File imageFile) async {
-    // Charger l'image en mémoire
-    final bytes = await imageFile.readAsBytes();
-    final original = img.decodeImage(bytes);
-    if (original == null) return null;
+  // Charger l'image en mémoire
+  final bytes = await imageFile.readAsBytes();
+  final original = img.decodeImage(bytes);
+  if (original == null) return null;
 
-    // Créer un InputImage pour ML Kit
-    final inputImage = InputImage.fromFile(imageFile);
-    final faces = await getFaces(inputImage);
-    if (faces.isEmpty) return null;
+  // ML Kit input
+  final inputImage = InputImage.fromFile(imageFile);
+  final faces = await getFaces(inputImage);
+  if (faces.isEmpty) return null;
 
-    final faceBox = faces.first.boundingBox;
-    
-    // Calculer la hauteur du visage
-    final faceHeight = faceBox.height;
-    
-    // AJOUTER 40% EN HAUT pour inclure les cheveux
-    final newTop = faceBox.top - (faceHeight * 0.25);
-    
-    // S'assurer que les coordonnées sont dans les limites de l'image
-    final x = faceBox.left < 0 ? 0 : faceBox.left.toInt();
-    final y = newTop < 0 ? 0 : newTop.toInt();  // Nouveau y avec marge en haut
-    final w = (faceBox.width + faceBox.left > original.width)
-        ? (original.width - x)
-        : faceBox.width.toInt();
-    final h = (faceBox.height + newTop > original.height)  // Utiliser newTop pour le calcul
-        ? (original.height - y)
-        : (faceBox.height + (faceHeight * 0.25)).toInt();  // Ajouter la même hauteur en bas pour équilibrer
+  final faceBox = faces.first.boundingBox;
 
-    // Recadrer le visage avec les cheveux
-    final cropped = img.copyCrop(
-      original,
-      x: x,
-      y: y,
-      width: w,
-      height: h,
-    );
+  // 📌 dimensions visage
+  final faceHeight = faceBox.height;
+  final faceWidth = faceBox.width;
 
-    // Sauvegarder dans un fichier temporaire
-    final tempDir = Directory.systemTemp;
-    final outFile = await File('${tempDir.path}/face_crop_${DateTime.now().millisecondsSinceEpoch}.png').create();
-    await outFile.writeAsBytes(img.encodePng(cropped));
-    return outFile;
-  }
+  // ================================
+  // 🔥 PADDING (haut + bas)
+  // ================================
+
+  const double topPaddingFactor = 0.25;     // cheveux + front
+  const double bottomPaddingFactor = 0.25;  // menton + cou (PLUS GRAND EN BAS)
+
+  final topPadding = faceHeight * topPaddingFactor;
+  final bottomPadding = faceHeight * bottomPaddingFactor;
+
+  // ================================
+  // 🔥 CALCUL COORDONNÉES SAFE
+  // ================================
+
+  final x = faceBox.left.clamp(0, original.width.toDouble());
+  final y = (faceBox.top - topPadding).clamp(0, original.height.toDouble());
+
+  final width = faceWidth
+      .clamp(0, original.width.toDouble() - x);
+
+  final height = (faceHeight + topPadding + bottomPadding)
+      .clamp(0, original.height.toDouble() - y);
+
+  // ================================
+  // 🔥 CROP IMAGE
+  // ================================
+
+  final cropped = img.copyCrop(
+    original,
+    x: x.toInt(),
+    y: y.toInt(),
+    width: width.toInt(),
+    height: height.toInt(),
+  );
+
+  // ================================
+  // 🔥 SAVE TEMP FILE
+  // ================================
+
+  final tempDir = Directory.systemTemp;
+  final outFile = File(
+    '${tempDir.path}/face_crop_${DateTime.now().millisecondsSinceEpoch}.png',
+  );
+
+  await outFile.writeAsBytes(img.encodePng(cropped));
+
+  return outFile;
+}
   
   void dispose() {
     _faceDetector.close();

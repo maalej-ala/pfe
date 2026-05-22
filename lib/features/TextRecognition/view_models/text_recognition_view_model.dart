@@ -163,7 +163,7 @@ List<String> get extractedIdCardLines {
 }
 
 String formatDate(String input) {
-  final parts = input.split('-'); // 26-06-1991
+  final parts = input.split('/'); // 26/06/1991
   return "${parts[2]}-${parts[1]}-${parts[0]}"; // 1991-06-26
 }
 
@@ -173,98 +173,149 @@ Map<String, String?> extractID(List<String> lines) {
     "nom": null,
     "prenom": null,
     "date_naissance": null,
-    "sexe": null,
-    "lieu_naissance": null,
-    "profession": null,
-    "date_etablissement": null,
     "date_expiration": null,
+    "adresse_domicile": null,
+    "sexe": null,
   };
 
-  for (final rawLine in lines) {
-    final line = rawLine.trim();
+  for (int i = 0; i < lines.length; i++) {
+    final line = lines[i].trim();
+
     if (line.isEmpty) continue;
 
-    // ── Numéro ──────────────────────────────────────────────
+    // =====================================================
+    // NUMERO CIN
+    // Exemple:
+    // 1 02 19960101 00093 8
+    // =====================================================
     if (data["numero"] == null) {
-      final m = RegExp(r'\d{4}-\d{3}-\d{4}').firstMatch(line);
-      if (m != null) {
-        data["numero"] = m.group(0);
+      final numeroMatch = RegExp(
+        r'^\d+\s+\d+\s+\d{8}\s+\d+\s+\d+$',
+      ).firstMatch(line);
+
+      if (numeroMatch != null) {
+        data["numero"] =
+            line.replaceAll(RegExp(r'\s+'), ' ').trim();
         continue;
       }
     }
 
-    // ── Nom ─────────────────────────────────────────────────
-    if (RegExp(r'^Nom\s*:?', caseSensitive: false).hasMatch(line)) {
-      data["nom"] = _extractValue(line);
+    // =====================================================
+    // PRENOM
+    // =====================================================
+    if (RegExp(r'^Pr[eé]noms?', caseSensitive: false)
+        .hasMatch(line)) {
+      if (i + 1 < lines.length) {
+        final value = lines[i + 1].trim();
+
+        if (!_isLabel(value)) {
+          data["prenom"] = value;
+        }
+      }
       continue;
     }
 
-    // ── Prénom ──────────────────────────────────────────────
-final prenomMatch = RegExp(
-  r'Pr[eé]nom\s*:?\s*(.*?)\s*(?=N[eé]?\s*le|Ne\s*le|N\s*le|Sexe|$)',
-  caseSensitive: false,
-).firstMatch(line);
+    // =====================================================
+    // NOM
+    // =====================================================
+    if (RegExp(r'^Nom$', caseSensitive: false)
+        .hasMatch(line)) {
+      if (i + 1 < lines.length) {
+        final value = lines[i + 1].trim();
 
-if (prenomMatch != null) {
-  data["prenom"] = prenomMatch.group(1)?.trim();
-}
-
-    // ── Date naissance + Sexe ────────────────────────────────
-    // "N le: 26-06-1991 Sexe: F"
-    if (RegExp(r'N[eé]?\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
-      final dateMatch = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
-      if (dateMatch != null) data["date_naissance"] = formatDate(dateMatch.group(0)!);
-
-      final sexeMatch = RegExp(r'Sexe\s*:?\s*([MF])', caseSensitive: false)
-          .firstMatch(line);
-      if (sexeMatch != null) data["sexe"] = sexeMatch.group(1)?.toUpperCase();
+        if (!_isLabel(value)) {
+          data["nom"] = value;
+        }
+      }
       continue;
     }
 
-    // ── Sexe seul (si sur ligne séparée) ────────────────────
-    if (data["sexe"] == null &&
-        RegExp(r'^Sexe\s*:?', caseSensitive: false).hasMatch(line)) {
-      final m = RegExp(r'Sexe\s*:\s*([MF])', caseSensitive: false)
-          .firstMatch(line);
-      if (m != null) data["sexe"] = m.group(1)?.toUpperCase();
-      continue;
+    // =====================================================
+    // DATE NAISSANCE + SEXE
+    // Exemple:
+    // 01/10/1996   M   172 cm
+    // =====================================================
+    if (data["date_naissance"] == null) {
+      final dateMatch = RegExp(
+        r'\d{2}/\d{2}/\d{4}',
+      ).firstMatch(line);
+
+      if (dateMatch != null) {
+        data["date_naissance"] =
+            formatDate(dateMatch.group(0)!);
+
+        final sexeMatch = RegExp(
+          r'\b(M|F)\b',
+          caseSensitive: false,
+        ).firstMatch(line);
+
+        if (sexeMatch != null) {
+          data["sexe"] =
+              sexeMatch.group(1)?.toUpperCase();
+        }
+      }
     }
 
-    // ── Lieu de naissance ────────────────────────────────────
-    // "A KPALIME VILLE /KLOTO"
-    if (RegExp(r'^A:?\s+[A-Z]').hasMatch(line) &&
-        data["lieu_naissance"] == null) {
-      data["lieu_naissance"] = line.replaceFirst(RegExp(r'^A:?\s+'), '').trim();
-      continue;
+    // =====================================================
+    // DATE EXPIRATION
+    // Exemple:
+    // 27/12/2017   26/12/2027
+    // =====================================================
+    final dates = RegExp(
+      r'\d{2}/\d{2}/\d{4}',
+    ).allMatches(line).map((e) => e.group(0)!).toList();
+
+    if (dates.length >= 2) {
+      data["date_expiration"] =
+          formatDate(dates[1]);
     }
 
-    // ── Profession ──────────────────────────────────────────
-    if (RegExp(r'^Profession\s*:?', caseSensitive: false).hasMatch(line)) {
-      data["profession"] = _extractValue(line);
-      continue;
-    }
+    // =====================================================
+    // ADRESSE DOMICILE
+    // =====================================================
+    if (RegExp(r'Adresse du domicile',
+            caseSensitive: false)
+        .hasMatch(line)) {
+      if (i + 1 < lines.length) {
+        final value = lines[i + 1].trim();
 
-    // ── Fait le (date établissement) ────────────────────────
-if (data["date_etablissement"] == null) {
-  if (RegExp(r'(fait|d[ée]livr[ée]|emis)', caseSensitive: false).hasMatch(line)) {
-    final m = RegExp(r'\d{2}[-/]\d{2}[-/]\d{4}').firstMatch(line);
-    if (m != null) {
-      data["date_etablissement"] = formatDate(m.group(0)!);
-      continue;
-    }
-  }
-}
-
-    // ── Expire le ───────────────────────────────────────────
-    if (RegExp(r'^Expire\s*le\s*:?', caseSensitive: false).hasMatch(line)) {
-      final m = RegExp(r'\d{2}-\d{2}-\d{4}').firstMatch(line);
-      if (m != null) data["date_expiration"] = formatDate(m.group(0)!);
+        if (!_isLabel(value)) {
+          data["adresse_domicile"] = value;
+        }
+      }
       continue;
     }
   }
 
   return data;
 }
+
+// =====================================================
+// Vérifie si la ligne est un label
+// =====================================================
+bool _isLabel(String text) {
+  final labels = [
+    'Nom',
+    'Prénoms',
+    'Prenom',
+    'Date de naissance',
+    'Sexe',
+    'Lieu de naissance',
+    'Adresse du domicile',
+    'Date de délivrance',
+    'Date d\'expiration',
+  ];
+
+  return labels.any(
+    (e) => text.toLowerCase().contains(e.toLowerCase()),
+  );
+}
+
+// =====================================================
+// Format date
+// 01/10/1996 -> 01-10-1996
+// =====================================================
+
 
 /// Extrait la valeur après le "Label:" 
 String? _extractValue(String line) {
@@ -299,6 +350,7 @@ Future<void> sendToBackend(Map<String, String?> data) async {
   request.fields['dateNaissance'] = data["date_naissance"] ?? "";
   request.fields['dateExpiration'] = data["date_expiration"] ?? "";
   request.fields['numeroCin'] = data["numero"] ?? "";
+  request.fields['adresseDomicile'] = data["adresse_domicile"] ?? "";
 
   // 🔥 image CIN
   if (selectedImage != null) {
@@ -310,6 +362,15 @@ Future<void> sendToBackend(Map<String, String?> data) async {
       ),
     );
   }
+
+  if (extractedFace != null) {
+  request.files.add(
+    await http.MultipartFile.fromPath(
+      'photoVisageCin',
+      extractedFace!.path,
+    ),
+  );
+}
 
   final response = await request.send();
 

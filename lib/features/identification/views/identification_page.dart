@@ -281,7 +281,7 @@ IntlPhoneField(
   ),
   onChanged: (phone) {  
     _viewModel.updatePhone(
-      phone.completeNumber,
+      '${phone.countryCode} ${phone.number}',
       phone.countryISOCode, // ✅ CORRECT
       phone.number,
     );

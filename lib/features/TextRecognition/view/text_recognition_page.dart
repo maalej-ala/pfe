@@ -166,55 +166,55 @@ class _TextRecognitionView extends StatelessWidget {
                         // Results Card
                         if (vm.result != null && !vm.isProcessing) ...[
                           //Extracted Text Card
-                          // Container(
-                          //   padding: const EdgeInsets.all(24),
-                          //   decoration: BoxDecoration(
-                          //     color: colorScheme.surface,
-                          //     borderRadius: BorderRadius.circular(24),
-                          //     boxShadow: [
-                          //       BoxShadow(
-                          //         color: colorScheme.primary.withValues(alpha: 0.08),
-                          //         blurRadius: 20,
-                          //         offset: const Offset(0, 4),
-                          //       ),
-                          //     ],
-                          //   ),
-                          //   child: Column(
-                          //     crossAxisAlignment: CrossAxisAlignment.start,
-                          //     children: [
-                          //       _SectionLabel(text: 'Texte reconnu'),
-                          //       const SizedBox(height: 16),
-                          //       ...vm.extractedIdCardLines.map((line) => Padding(
-                          //         padding: const EdgeInsets.only(bottom: 8),
-                          //         child: Container(
-                          //           width: double.infinity,
-                          //           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-                          //           decoration: BoxDecoration(
-                          //             color: theme.scaffoldBackgroundColor,
-                          //             borderRadius: BorderRadius.circular(12),
-                          //             border: Border.all(
-                          //               color: colorScheme.primary.withValues(alpha: 0.1),
-                          //             ),
-                          //           ),
-                          //           child: Text(
-                          //             line,
-                          //             style: theme.textTheme.bodyMedium?.copyWith(
-                          //               fontFamily: 'monospace',
-                          //               fontSize: 13,
-                          //             ),
-                          //           ),
-                          //         ),
-                          //       )),
-                          //     ],
-                          //   ),
-                          // ),
+                          Container(
+                            padding: const EdgeInsets.all(24),
+                            decoration: BoxDecoration(
+                              color: colorScheme.surface,
+                              borderRadius: BorderRadius.circular(24),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: colorScheme.primary.withValues(alpha: 0.08),
+                                  blurRadius: 20,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                _SectionLabel(text: 'Texte reconnu'),
+                                const SizedBox(height: 16),
+                                ...vm.extractedIdCardLines.map((line) => Padding(
+                                  padding: const EdgeInsets.only(bottom: 8),
+                                  child: Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                                    decoration: BoxDecoration(
+                                      color: theme.scaffoldBackgroundColor,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: colorScheme.primary.withValues(alpha: 0.1),
+                                      ),
+                                    ),
+                                    child: Text(
+                                      line,
+                                      style: theme.textTheme.bodyMedium?.copyWith(
+                                        fontFamily: 'monospace',
+                                        fontSize: 13,
+                                      ),
+                                    ),
+                                  ),
+                                )),
+                              ],
+                            ),
+                          ),
 
-                          // const SizedBox(height: 20),
-
-
+                          const SizedBox(height: 20),
 
 
-                          // Extracted Data Card
+
+
+                         // Extracted Data Card
                           Container(
                             padding: const EdgeInsets.all(24),
                             decoration: BoxDecoration(
@@ -236,19 +236,44 @@ class _TextRecognitionView extends StatelessWidget {
                                 Builder(
                                   builder: (_) {
                                     final extracted = vm.extractID(vm.extractedIdCardLines);
-                                    return Column(
-                                      children: [
-                                        _DataRow(label: 'Numéro', value: extracted['numero'] ?? '-'),
-                                        _DataRow(label: 'Nom', value: extracted['nom'] ?? '-'),
-                                        _DataRow(label: 'Prénom', value: extracted['prenom'] ?? '-'),
-                                        _DataRow(label: 'Date de naissance', value: extracted['date_naissance'] ?? '-'),
-                                        _DataRow(label: 'Sexe', value: extracted['sexe'] ?? '-'),
-                                        _DataRow(label: 'Lieu de naissance', value: extracted['lieu_naissance'] ?? '-'),
-                                        _DataRow(label: 'Date d\'établissement', value: extracted['date_etablissement'] ?? '-'),
-                                        _DataRow(label: 'Date d\'expiration', value: extracted['date_expiration'] ?? '-'),
-                                        _DataRow(label: 'Profession', value: extracted['profession'] ?? '-'),
-                                      ],
-                                    );
+                                  return Column(
+  children: [
+    _DataRow(
+      label: 'Numéro CIN',
+      value: extracted['numero'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Nom',
+      value: extracted['nom'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Prénom',
+      value: extracted['prenom'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Date de naissance',
+      value: extracted['date_naissance'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Sexe',
+      value: extracted['sexe'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Date d\'expiration',
+      value: extracted['date_expiration'] ?? '-',
+    ),
+
+    _DataRow(
+      label: 'Adresse domicile',
+      value: extracted['adresse_domicile'] ?? '-',
+    ),
+  ],
+);
                                   },
                                 ),
                               ],
@@ -488,7 +513,7 @@ class _DataRow extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              width: 120,
+              width: 110,
               child: Text(
                 '$label:',
                 style: theme.textTheme.bodyMedium?.copyWith(

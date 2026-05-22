@@ -136,7 +136,7 @@ class _Take3PhotoPageState extends State<Take3PhotoPage>
                           PrimaryButton(
     text: 'Terminer la vérification',
     onPressed: () {
-      final photoVisageLive = _viewModel.state.facePhotoPath;
+      final photoVisageLive = _viewModel.state.frontFaceExtracted;
 
       if (photoVisageLive == null) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -148,7 +148,7 @@ class _Take3PhotoPageState extends State<Take3PhotoPage>
       }
 
       // ⚡ Retourner le fichier à la page précédente
-      Navigator.pop(context, File(photoVisageLive));
+      Navigator.pop(context, photoVisageLive);
     },
     enabled: true,
   ),

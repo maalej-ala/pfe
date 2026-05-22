@@ -207,12 +207,16 @@ class _ChoixBancairePageState extends State<ChoixBancairePage> {
     if (mounted) setState(() {});
   }
 
-  void _selectTypeCompte(String key) {
-    setState(() {
-      _typeCompte = key;
-      _viewModel.updateTypeCarte(null); // reset pack si changement de type
-    });
-  }
+void _selectTypeCompte(String key) {
+  setState(() {
+    _typeCompte = key;
+
+    _viewModel.updateTypeCompte(key);
+
+    // reset pack
+    _viewModel.updateTypeCarte(null);
+  });
+}
 
   @override
   void dispose() {
@@ -221,18 +225,51 @@ class _ChoixBancairePageState extends State<ChoixBancairePage> {
     super.dispose();
   }
 
-  void _onContinuer() {
-    if (_typeCompte == null) {
-      _showSnack('Veuillez choisir un type de compte.');
-      return;
-    }
-    if (!_viewModel.state.isValid) {
-      _showSnack('Veuillez sélectionner une agence et un pack.');
-      return;
-    }
-    Navigator.push(context,
-        MaterialPageRoute(builder: (_) => const MotDePassePage()));
+ Future<void> _onContinuer() async {
+
+  if (_typeCompte == null) {
+
+    _showSnack(
+      'Veuillez choisir un type de compte.',
+    );
+
+    return;
   }
+
+  if (!_viewModel.state.isValid) {
+
+    _showSnack(
+      'Veuillez sélectionner une agence et un pack.',
+    );
+
+    return;
+  }
+
+  final success =
+      await _viewModel.saveChoixBancaire();
+
+  if (!mounted) return;
+
+  if (success) {
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) =>
+            const MotDePassePage(),
+      ),
+    );
+
+  } else {
+
+    _showSnack(
+
+      _viewModel.state.error ??
+
+      'Erreur inconnue',
+    );
+  }
+}
 
   void _showSnack(String msg) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -341,11 +378,17 @@ class _ChoixBancairePageState extends State<ChoixBancairePage> {
 
                       const SizedBox(height: 28),
 
-                      PrimaryButton(
-                        text: 'Continuer',
-                        onPressed: _onContinuer,
-                        enabled: _typeCompte != null && state.isValid,
-                      ),
+                     PrimaryButton(
+  text: state.isLoading
+      ? 'Chargement...'
+      : 'Continuer',
+  onPressed: state.isLoading
+      ? null
+      : _onContinuer,
+  enabled: _typeCompte != null &&
+      state.isValid &&
+      !state.isLoading,
+),
                       const SizedBox(height: 32),
                     ],
                   ),
