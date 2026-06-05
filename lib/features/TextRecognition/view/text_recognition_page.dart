@@ -8,7 +8,10 @@ import 'package:provider/provider.dart';
 import '../view_models/text_recognition_view_model.dart';
 import 'dart:io';
 import 'package:camera/camera.dart';
-
+//////////////////////////////////////
+/////////////////////////
+///REMARQUE tu peut utiliser easyOCR c est plus perfermant que ml kit
+//////////////////////////////////////////
 class TextRecognitionPage extends StatelessWidget {
   const TextRecognitionPage({super.key});
 
@@ -397,26 +400,69 @@ class _TextRecognitionView extends StatelessWidget {
     }
 
     try {
-      // Send OCR data to backend
-      await vm.sendToBackend(vm.extractID(vm.extractedIdCardLines));
 
-      if (!context.mounted) return;
+  final model = vm.extractedModel;
 
-      // Navigate to identification page
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => const IdentificationPage(),
-        ),
-      );
-    } catch (e) {
-      if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Erreur serveur: $e'),
-        ),
-      );
-    }
+  if (model == null) {
+    throw Exception(
+      "Aucune donnée OCR détectée",
+    );
+  }
+
+  // 🔥 Envoi backend
+  await vm.sendToBackend({
+
+    "numero": model.numero,
+
+    "nom": model.nom,
+
+    "prenom": model.prenom,
+
+    "date_naissance":
+        model.dateNaissance,
+
+    "date_expiration":
+        model.dateExpiration,
+
+    "adresse_domicile":
+        model.adresseDomicile,
+
+    "sexe": model.sexe,
+  });
+
+  if (!context.mounted) return;
+
+  // 🔥 Navigation succès
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (_) =>
+          const IdentificationPage(),
+    ),
+  );
+
+} catch (e) {
+
+  debugPrint(
+    "OCR SEND ERROR: $e",
+  );
+
+  if (!context.mounted) return;
+
+  ScaffoldMessenger.of(context)
+      .showSnackBar(
+
+    SnackBar(
+
+      behavior:
+          SnackBarBehavior.floating,
+
+      content: Text(
+        'Erreur serveur : $e',
+      ),
+    ),
+  );
+}
   }
 }
 

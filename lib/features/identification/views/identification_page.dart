@@ -324,11 +324,11 @@ IntlPhoneField(
 
                           const SizedBox(height: 20),
 
-                          _SectionLabel(text: 'Numéro CIN'),
+                          _SectionLabel(text: 'Numéro Identifiant national'),
                           const SizedBox(height: 8),
                           _InputField(
                             controller: _cinController,
-                            hint: 'Numéro de votre CIN',
+                            hint: 'Numéro de votre Identifiant national',
                             icon: Icons.badge_outlined,
                             keyboardType: TextInputType.text,
                             onChanged: _viewModel.updateCin,
@@ -336,7 +336,7 @@ IntlPhoneField(
 
                           const SizedBox(height: 20),
 
-                          _SectionLabel(text: 'Date d\'expiration CIN'),
+                          _SectionLabel(text: 'Date d\'expiration Identifiant national'),
                           const SizedBox(height: 8),
                           GestureDetector(
                             onTap: _selectExpirationDate,
